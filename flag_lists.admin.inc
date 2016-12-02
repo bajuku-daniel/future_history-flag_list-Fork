@@ -88,7 +88,7 @@ function flag_lists_add($type = NULL) {
 function flag_lists_add_js($type = NULL) {
 
   $token = $_REQUEST['form_token'];
-  if ( is_null($token) || !drupal_valid_token($token, variable_get('flag_lists_name','list'))) { 
+  if ( is_null($token) || !drupal_valid_token($token, variable_get('flag_lists_name','list'))) {
     drupal_json_output(array('error' => t('Are you using an old link?')));
     exit();
   }
@@ -181,7 +181,6 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL) {
   // Editing an existing list.
   else {
     $flag = flag_lists_get_flag($name);
-
     $title_string_name = t('@name', array('@name' => variable_get('flag_lists_name', 'list')));
     $title_string = t('Edit your "@title" @name title', array('@title' => $flag->get_title(), '@name' => $title_string_name));
     drupal_set_title();
@@ -204,29 +203,28 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL) {
     '#maxlength' => 45,
     '#required' => TRUE,
     '#access' => empty($flag->locked['title']),
-    '#size' => 45,    
+    '#size' => 45,
     '#weight' => -2,
   );
 
 
 // Daniel Frings: add description, period start and end
-
  $form['description'] = array(
     '#type' => 'textarea',
     '#title' => t('Description'),
     '#default_value' => empty($flag->description) ? '' : $flag->description,
-    '#description' => t('A Description for this @name list. Limit to 400 characters.', array('@name' => variable_get('flag_lists_name', 'list'))),
+    '#description' => t('A Description for this @name Tour. Limit to 400 characters.', array('@name' => variable_get('flag_lists_name', 'list'))),
     '#maxlength' => 400,
+    '#maxlength_js' => TRUE,
     '#required' => TRUE,
     '#access' => empty($flag->locked['title']),
     '#weight' => -1,
   );
-
- $form['period_start'] = array(
+  $form['period_start'] = array(
     '#type' => 'textfield',
     '#title' => t('Period start Year'),
     '#default_value' => empty($flag->period_start) ? '' : $flag->period_start,
-    '#description' => t('The Period Start Year of the @name list.', array('@name' => variable_get('flag_lists_name', 'list'))),
+    '#description' => t('The Period Start Year of the @name Tour.', array('@name' => variable_get('flag_lists_name', 'list'))),
     '#maxlength' => 45,
     '#required' => FALSE,
     '#access' => empty($flag->locked['title']),
@@ -234,18 +232,35 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL) {
     '#size' => 10,
     '#weight' => 1,
   );
- $form['period_end'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Period end Year'),
-    '#default_value' => empty($flag->period_end) ? '' : $flag->period_end,
-    '#description' => t('The Period end Year of the @name list.', array('@name' => variable_get('flag_lists_name', 'list'))),
-    '#maxlength' => 45,
-    '#required' => FALSE,
-    '#access' => empty($flag->locked['title']),
-    '#disabled' => TRUE,
-    '#size' => 10,
-    '#weight' => 2,
-  );
+  $form['period_end'] = array(
+     '#type' => 'textfield',
+     '#title' => t('Period end Year'),
+     '#default_value' => empty($flag->period_end) ? '' : $flag->period_end,
+     '#description' => t('The Period end Year of the @name Tour.', array('@name' => variable_get('flag_lists_name', 'list'))),
+     '#maxlength' => 45,
+     '#required' => FALSE,
+     '#access' => empty($flag->locked['title']),
+     '#disabled' => TRUE,
+     '#size' => 10,
+     '#weight' => 2,
+
+   );$form['tour_distance'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Tour Distance'),
+      '#default_value' => empty($flag->tour_distance) ? '' : $flag->tour_distance,
+      '#description' => t('The Distance of the @name Tour.', array('@name' => variable_get('flag_lists_name', 'list'))),
+      '#maxlength' => 6,
+      '#required' => FALSE,
+      '#access' => empty($flag->locked['title']),
+      '#disabled' => TRUE,
+      '#size' => 10,
+      '#weight' => 3,
+    );
+    if ($form['edit']['#value'] == TRUE) {
+      $form['period_start']['#disabled'] = FALSE;
+      $form['period_end']['#disabled'] = FALSE;
+      $form['tour_distance']['#disabled'] = FALSE;
+    }
 
 
   $form['type'] = array(
@@ -255,7 +270,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL) {
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
-    '#weight' => 2,
+    '#weight' => 4,
 
   );
 
@@ -293,6 +308,10 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     // Editing the title.
     $flag = flag_lists_get_flag($form_state['values']['name']);
     $flag->title = $form_state['values']['title'];
+    $flag->description = $form_state['values']['description'];
+    $flag->period_start = $form_state['values']['period_start'];
+    $flag->period_end = $form_state['values']['period_end'];
+    $flag->tour_distance = $form_state['values']['tour_distance'];
     flag_lists_set_messages($flag);
     flag_lists_save($flag);
     _flag_lists_clear_cache();
@@ -320,6 +339,7 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->name = NULL;
     $flag->link_type = 'toggle';
     $flag->title = $form_state['values']['title'];
+    $flag->description = $form_state['values']['description'];
     $flag->types = array($type);
     $flag->uid = $account->uid;
     flag_lists_set_messages($flag);

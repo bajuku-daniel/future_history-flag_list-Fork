@@ -47,6 +47,31 @@ function flag_lists_schema() {
         'not null' => FALSE,
         'default' => '',
       ),
+      // Daniel Frings: add the custom fields for future_history touren function
+      'description' => array(
+        'type' => 'varchar',
+        'length' => '400',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'period_start' => array(
+        'type' => 'varchar',
+        'length' => '45',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'period_end' => array(
+        'type' => 'varchar',
+        'length' => '45',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'tour_distance' => array(
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+        'default' => '',
+      ),
       'options' => array(
         'type' => 'text',
         'not null' => FALSE,
@@ -204,22 +229,22 @@ function flag_lists_uninstall() {
   db_delete('variable')->condition('name', 'flag_lists%', 'LIKE')->execute();
 
   $view_to_delete = views_get_view('flag_lists');
-  if (!empty($view_to_delete)) {  
+  if (!empty($view_to_delete)) {
     views_delete_view($view_to_delete);
   }
 
   $view_to_delete =views_get_view('flag_lists_content');
-  if (!empty($view_to_delete)) {  
+  if (!empty($view_to_delete)) {
     views_delete_view($view_to_delete);
   }
 
   $view_to_delete = views_get_view('flag_lists_user_lists');
-  if (!empty($view_to_delete)) {  
+  if (!empty($view_to_delete)) {
     views_delete_view($view_to_delete);
   }
 
   $view_to_delete = views_get_view('flag_lists_user_list');
-  if (!empty($view_to_delete)) {  
+  if (!empty($view_to_delete)) {
     views_delete_view($view_to_delete);
   }
 
@@ -279,7 +304,7 @@ function flag_lists_update_7302() {
   db_drop_unique_key('flag_lists_content','fid_content_id_uid_sid');
   db_drop_index('flag_lists_content','content_type_content_id');
   db_drop_index('flag_lists_content','content_type_uid_sid');
- 
+
   db_change_field('flag_lists_content','content_type', 'entity_type',
     array(
       'type' => 'varchar',
@@ -303,7 +328,7 @@ function flag_lists_update_7302() {
     'entity_type_uid_sid',
     array('entity_type', 'uid', 'sid'));
   db_add_index('flag_lists_content',
-    'entity_type_entity_id', 
+    'entity_type_entity_id',
     array('entity_type', 'entity_id'));
 }
 
@@ -384,4 +409,42 @@ function flag_lists_update_7305() {
       'unsigned' => TRUE,
       'not null' => TRUE,
     ));
+}
+
+/**
+ * Daniel Frings: add new fields to the "flag_lists_flags" table
+ */
+function flag_lists_update_7306() {
+  $fields = array(
+    'description' => array(
+      'type' => 'varchar',
+      'length' => '400',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+    'period_start' => array(
+      'type' => 'varchar',
+      'length' => '45',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+    'period_end' => array(
+      'type' => 'varchar',
+      'length' => '45',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+    'tour_distance' => array(
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+  );
+
+  foreach ($fields as $key => $field)  {
+    if (!db_field_exists('flag_lists_flags', $key)) {
+      db_add_field('flag_lists_flags', $key, $field);
+    }
+  }
 }

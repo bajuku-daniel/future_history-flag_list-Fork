@@ -112,4 +112,3 @@ allow users with "administer flags" permission to bypass flag_lists_is_owner()
 checks.
 First run at views integration
 Better admin table for lists
-

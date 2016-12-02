@@ -237,17 +237,86 @@ function flag_lists_views_data() {
         'handler' => 'views_handler_sort',
       ),
     ),
+    //Daniel Frings: add description, period dates and distance
+    'description' => array(
+      'title' => t('List description'),
+      'help' => t('description of the list'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    'period_start' => array(
+      'title' => t('Tour start date'),
+      'help' => t('The Tour start date'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    'period_end' => array(
+      'title' => t('Tour end date'),
+      'help' => t('The Tour end date'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    'tour_distance' => array(
+      'title' => t('Tour distance in KM'),
+      'help' => t('The Tour distance in KM'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
     'edit_list' => array(
       'field' => array(
         'title' => t('Edit link'),
-        'help' => t('Link to edit the list title'),
+        'help' => t('Link to edit the Tour'),
         'handler' => 'flag_lists_handler_field_list_edit',
       ),
     ),
     'delete_list' => array(
       'field' => array(
         'title' => t('Delete link'),
-        'help' => t('Link to delete the list'),
+        'help' => t('Link to delete the whole Tour'),
         'handler' => 'flag_lists_handler_field_list_delete',
       ),
     ),

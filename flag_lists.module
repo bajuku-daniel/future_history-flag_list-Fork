@@ -141,7 +141,7 @@ function flag_lists_menu() {
     'type' => MENU_LOCAL_TASK,
   );
   $items['user/%user/flag/lists/%'] = array(
-    'title' =>drupal_ucfirst(variable_get('flag_lists_name', 'list') 
+    'title' =>drupal_ucfirst(variable_get('flag_lists_name', 'list')
       . ' ' . 'content'),
     'page callback' => 'flag_lists_user_list',
     'page arguments' => array(1, 4),
@@ -573,7 +573,7 @@ function flag_lists_ops_form_submit($form, &$form_state) {
       foreach ($user_flag_lists as $key => $op) {
         // Iterate over all flags by this user
         list($k1,$k2,$owner,$ofid) = explode('_', $key);
-        
+
         foreach ($ops as $op) {
           // Iterate over all selected items
           list($nid,$fid) = array_merge( explode('-', $op), array(FALSE));
@@ -1009,7 +1009,7 @@ function flag_lists_get_user_flags($content_type = NULL, $account = NULL, $use_f
     foreach ($flags as $key => $flag) {
       if (!isset($flag->module)) {
         // Assume flag is from flag module
-        $flags[$key]->module = 'flag'; 
+        $flags[$key]->module = 'flag';
       }
       // Strip out any list templates
       if (stristr($flag->name, 'fl_template') !== FALSE) {
@@ -1107,10 +1107,9 @@ function theme_flag_lists_list($variables) {
         $link = $flag->theme($action, $entity_id) . $ops_links;
       }
       else {
-        
+
         $link = $flag->theme($action, $entity_id);
       }
-      dsm(theme('flag_lists_ops', array('flag' => $flag)));
 
       // If it's a list, fix the link.
       if ($flag->module == 'flag_lists') {
@@ -1353,6 +1352,10 @@ function flag_lists_update($flag) {
   $num_updated = db_update('flag_lists_flags')
     ->fields(array(
       'title' => $flag->title,
+      'description' => $flag->description,
+      'period_start' => $flag->period_start,
+      'period_end' => $flag->period_end,
+      'tour_distance' => $flag->tour_distance,
       'name' => $flag->name,
       'options' => $flag->get_serialized_options($flag),
     ))
@@ -1371,6 +1374,10 @@ function flag_lists_insert($flag) {
       'entity_type' => $flag->entity_type,
       'name' => $flag->name,
       'title' => $flag->title,
+      'description' => $flag->description,
+      'period_start' => $flag->period_start,
+      'period_end' => $flag->period_end,
+      'tour_distance' => $flag->tour_distance,
       'options' => $flag->get_serialized_options($flag),
     ))
     ->execute();
