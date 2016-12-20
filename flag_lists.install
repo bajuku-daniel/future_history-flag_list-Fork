@@ -72,6 +72,12 @@ function flag_lists_schema() {
         'not null' => FALSE,
         'default' => '',
       ),
+      'manual_date' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'options' => array(
         'type' => 'text',
         'not null' => FALSE,
@@ -447,4 +453,18 @@ function flag_lists_update_7306() {
       db_add_field('flag_lists_flags', $key, $field);
     }
   }
+}
+/**
+ * Daniel Frings: add new field:manual_date to the "flag_lists_flags" table
+ */
+function flag_lists_update_7307() {
+  db_add_field('flag_lists_flags', 'manual_date',
+    array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+    )
+  );
+
 }

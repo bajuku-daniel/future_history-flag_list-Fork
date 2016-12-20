@@ -153,6 +153,51 @@ function flag_lists_menu() {
 }
 
 /**
+ * Daniel Frings: add flag link create function for the "hinzufügen" overlay
+ */
+function flag_lists_create_link() {
+  return theme('flag_lists_list', array(
+    'node' => NULL,
+    'create' => 1,
+    'ops' => 0,
+    'use_flags' => 0
+  ));
+}
+
+function flag_lists_set_date($id = NULL, $flag, $action ) {
+
+  //if we have an ID we flag a new node
+  if ($id && $action == 'flag' && $flag->manual_date == 0) {
+    $flag_node = node_load($id);
+    $new_node_year = $flag_node -> field_jahr['und'][0]['value'];
+    $flag_start_year = $flag -> period_start;
+    $flag_end_year = $flag -> period_end;
+
+    if ($flag_start_year > $new_node_year || $flag_start_year == '') {
+      $date_update = db_update('flag_lists_flags')
+        ->fields(array(
+          'period_start' => $new_node_year,
+        ))
+        ->condition('fid', $flag->fid)
+        ->execute();
+
+    }
+
+    if ($flag_end_year < $new_node_year || $flag_end_year == '') {
+      $date_update = db_update('flag_lists_flags')
+        ->fields(array(
+          'period_end' => $new_node_year,
+        ))
+        ->condition('fid', $flag->fid)
+        ->execute();
+    }
+  }
+
+}
+
+
+
+/**
  * User flag page. Display a list of user-created flag lists.
  */
 function flag_lists_user_page($user) {
@@ -1066,7 +1111,6 @@ function theme_flag_lists_list($variables) {
   $create = $variables['create'];
   $ops = $variables['ops'];
   $use_flags = $variables['use_flags'];
-
   $items = array();
 
   // Make sure we have a node.
@@ -1074,7 +1118,7 @@ function theme_flag_lists_list($variables) {
     $content_type = $node->type;
     $entity_id = $node->nid;
   }
-  // Or at least confirm we are on a node page and use has access.
+  // Or at least confirm we are on a node page and user has access.
   elseif (arg(0) == 'node' && is_numeric(arg(1)) && user_access('create flag lists')) {
     $entity_id = arg(1);
     $query = db_select('node')->condition('nid', $entity_id);
@@ -1107,7 +1151,6 @@ function theme_flag_lists_list($variables) {
         $link = $flag->theme($action, $entity_id) . $ops_links;
       }
       else {
-
         $link = $flag->theme($action, $entity_id);
       }
 
@@ -1356,12 +1399,13 @@ function flag_lists_update($flag) {
       'period_start' => $flag->period_start,
       'period_end' => $flag->period_end,
       'tour_distance' => $flag->tour_distance,
+      'manual_date' => $flag->manual_date,
       'name' => $flag->name,
       'options' => $flag->get_serialized_options($flag),
     ))
     ->condition('fid', $flag->fid)
     ->execute();
-}
+  }
 
 /**
  * Saves a new flag to the database. Better use save($flag).
@@ -1378,11 +1422,17 @@ function flag_lists_insert($flag) {
       'period_start' => $flag->period_start,
       'period_end' => $flag->period_end,
       'tour_distance' => $flag->tour_distance,
+      'manual_date' => $flag->manual_date,
       'options' => $flag->get_serialized_options($flag),
     ))
     ->execute();
   $flag->name = 'flag_lists_' . $flag->uid . '_' . $flag->fid;
   flag_lists_update($flag);
+
+  //Daniel Frings: add departure node to the tour if we have one
+  if ($flag->departure_node != NULL) {
+      flag_lists_do_flag($flag, 'flag', $flag->departure_node, $account = NULL, $skip_permission_check = FALSE);
+  }
 }
 
 /**
@@ -1553,6 +1603,10 @@ function flag_lists_do_flag($flag, $action, $entity_id, $account = NULL, $skip_p
     if (!$flagged) {
       $fcid = _flag_lists_flag($flag, $entity_id, $uid, $sid);
       module_invoke_all('flag_flag', $flag, $entity_id, $account, $fcid);
+
+      flag_lists_set_date($entity_id, $flag, $action);
+
+
       return TRUE;
     }
   }
