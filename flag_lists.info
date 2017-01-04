@@ -4,6 +4,8 @@ package = Flags
 dependencies[] = flag (>7.x-3.0)
 dependencies[] = token
 dependencies[] = views
+dependencies[] = views_delimited_list
+dependencies[] = views_field_view 
 
 files[] = flag_lists.admin.inc
 files[] = flag_lists.module
@@ -28,4 +30,3 @@ version = "7.x-3.1"
 core = "7.x"
 project = "flag_lists"
 datestamp = "1473230043"
-
