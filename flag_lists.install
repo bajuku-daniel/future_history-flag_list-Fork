@@ -126,6 +126,12 @@ function flag_lists_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'weight' => array(
+        'type' => 'int',
+        'unsigned' => FALSE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'timestamp' => array(
         'type' => 'int',
         'unsigned' => TRUE,
@@ -466,5 +472,17 @@ function flag_lists_update_7307() {
       'default' => 0,
     )
   );
-
+}
+/**
+ * Daniel Frings: add new field:weight to the "flag_lists_content" table
+ */
+function flag_lists_update_7308() {
+  db_add_field('flag_lists_content', 'weight',
+    array(
+      'type' => 'int',
+      'unsigned' => FALSE,
+      'not null' => TRUE,
+      'default' => 0,
+    )
+  );
 }

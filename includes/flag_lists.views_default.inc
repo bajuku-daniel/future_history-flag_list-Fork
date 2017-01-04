@@ -575,6 +575,36 @@ function flag_lists_views_default_views() {
       'field' => 'timestamp',
       'relationship' => 'none',
     ),
+    'weight' => array(
+      'label' => 'List Item weighttt',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'link_to_list' => 0,
+      'exclude' => 0,
+      'id' => 'weight',
+      'table' => 'flag_lists_content',
+      'field' => 'weight',
+      'relationship' => 'none',
+    ),
   ));
   $handler->override_option('filters', array(
     'status' => array(
@@ -611,7 +641,9 @@ function flag_lists_views_default_views() {
       'title' => 'title',
       'title_1' => 'title_1',
       'name' => 'name',
-      'timestamp' => 'timestamp',
+      'timestamp' => 'timestamp',      
+      'weight' => 'weight',
+
     ),
     'info' => array(
       'title' => array(
@@ -627,6 +659,10 @@ function flag_lists_views_default_views() {
         'separator' => '',
       ),
       'timestamp' => array(
+        'sortable' => 1,
+        'separator' => '',
+      ),
+      'weight' => array(
         'sortable' => 1,
         'separator' => '',
       ),
@@ -864,6 +900,13 @@ function flag_lists_views_default_views() {
       'id' => 'timestamp',
       'table' => 'flag_lists_content',
       'field' => 'timestamp',
+      'relationship' => 'none',
+    ),
+    'weight' => array(
+      'order' => 'DESC',
+      'id' => 'weight',
+      'table' => 'flag_lists_content',
+      'field' => 'weight',
       'relationship' => 'none',
     ),
   ));

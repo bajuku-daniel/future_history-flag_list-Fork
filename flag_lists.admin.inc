@@ -263,7 +263,6 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#description' => t('This is where we put our dates'),
     '#weight' => 2,
   );
-
   if ( (!isset($form_state['values']['manual_date']) && $form['manual_date']['#default_value'] == 1) || (isset($form_state['values']['manual_date']) && $form_state['values']['manual_date'] == 1 )  ) {
     $form['dates']['period_start'] = array(
       '#type' => 'textfield',
@@ -290,7 +289,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#weight' => 2,
     );
   }
-  else if ( (!isset($form_state['values']['manual_date']) && $form['manual_date']['#default_value'] == 0) || (isset($form_state['values']['manual_date']) && $form_state['values']['manual_date'] == 0 ) ) {
+  else if ( (!isset($form_state['values']['manual_date']) && $form['manual_date']['#default_value'] == 0 ) ) {
     $form['dates']['period_start'] = array(
       '#type' => 'textfield',
       '#title' => t('Period start Year'),
@@ -303,7 +302,6 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#weight' => 1,
       '#disabled' => TRUE,
     );
-
     $form['dates']['period_end'] = array(
       '#type' => 'textfield',
       '#title' => t('Period end Year'),
@@ -316,15 +314,42 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#weight' => 2,
       '#disabled' => TRUE,
     );
+  }
+  else if ( $form_state['values']['manual_date'] == 0 ) {
+    $tour_dates = flag_lists_set_date($id = NULL, $flag, 'renew');
+    $form['dates']['period_start'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Period start Year new calculated'),
+      '#default_value' => $tour_dates['start'],
+      '#description' => t('The Period Start Year of the @name Tour.', array('@name' => variable_get('flag_lists_name', 'list'))),
+      '#maxlength' => 45,
+      '#required' => TRUE,
+      '#access' => empty($flag->locked['title']),
+      '#size' => 10,
+      '#weight' => 1,
+      '#disabled' => TRUE,
+    );
 
+    $form['dates']['period_end'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Period end Year new calculated'),
+      '#default_value' => $tour_dates['end'],
+      '#description' => t('The Period end Year of the @name Tour.', array('@name' => variable_get('flag_lists_name', 'list'))),
+      '#maxlength' => 45,
+      '#required' => FALSE,
+      '#access' => empty($flag->locked['title']),
+      '#size' => 10,
+      '#weight' => 2,
+      '#disabled' => TRUE,
+    );
   }
 
   $form['tour_distance'] = array(
-    '#type' => 'textfield',
+    '#type' => 'hidden',
     '#title' => t('Tour Distance'),
     '#default_value' => empty($flag->tour_distance) ? '' : $flag->tour_distance,
     '#description' => t('The Distance of the @name Tour.', array('@name' => variable_get('flag_lists_name', 'list'))),
-    '#maxlength' => 6,
+    '#maxlength' => 10,
     '#required' => FALSE,
     '#access' => empty($flag->locked['title']),
     '#disabled' => FALSE,
@@ -332,13 +357,90 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#weight' => 4,
   );
 
+
+  /*
+  *  DF: add the Tour Sort functionality to the edit tour form
+  */
+  $rows = array();
+  $row_elements = array();
+
+  // Put it into a fieldset for no reason.
+  $form['data_table'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Change POI Order'),
+    '#weight' => 5,
+  );
+
+  // Collect our data.
+  $table_data = flag_lists_get_node_list_edit_values($flag);
+  foreach ($table_data as $node_detail) {
+    $node_id = $node_detail['entity_id'];
+    $data[$node_id] = array(
+      'weight' => $node_detail['weight'],
+      'name' => $node_detail['node_details']->title,
+      'picture' => theme('image_style', array('path' => $node_detail['node_details']->field_bild['und'][0]['uri'], 'style_name' => 'thumbnail')),
+    );
+  }
+  // Sort the rows.
+  //uasort($data, 'flag_lists_form_weight_arraysort');
+
+  // Build the rows.
+  foreach ($data as $id => $entry) {
+    // Build the table rows.
+    $rows[$id] = array(
+      'data' => array(
+        // Cell for the cross drag&drop element.
+        array('class' => array('entry-cross')),
+        // Weight item for the tabledrag.
+        array('data' => array(
+          '#type' => 'weight',
+          '#title' => t('Weight'),
+          '#title_display' => 'invisible',
+          '#default_value' => $entry['weight'],
+          '#parents' => array('data_table', $id, 'weight'),
+          '#attributes' => array(
+            'class' => array('entry-order-weight'),
+          ),
+        )),
+        // Entry picture.
+        $entry['picture'],
+        // Name textfield.
+        check_plain($entry['name']),
+      ),
+      'class' => array('draggable'),
+    );
+    // Build rows of the form elements in the table.
+    $row_elements[$id] = array(
+      'weight' => &$rows[$id]['data'][1]['data'],
+    //  'name' => &$rows[$id]['data'][2]['data'],
+    );
+  }
+
+  // Add the table to the form.
+  $form['data_table']['table'] = array(
+    '#theme' => 'table',
+    // The row form elements need to be processed and build,
+    // therefore pass them as element children.
+    'elements' => $row_elements,
+    '#header' => array(
+      // We need two empty columns for the weigth field and the cross.
+      array('data' => NULL, 'colspan' => 2),
+      t('Picture'),
+      t('Name'),
+    ),
+    '#rows' => $rows,
+    '#empty' => t('There are no entries available.'),
+    '#attributes' => array('id' => 'entry-order'),
+  );
+  drupal_add_tabledrag('entry-order', 'order', 'sibling', 'entry-order-weight');
+
   if ($form['edit']['#value'] == FALSE) {
     $form['dates']['period_start']['#type'] = 'hidden';
     $form['dates']['period_end']['#type'] = 'hidden';
-    $form['tour_distance']['#type'] = 'textfield';
     $form['dates']['#type'] = 'hidden';
     $form['manual_date']['#type'] = 'hidden';
     $form['tour_distance']['#disabled'] = FALSE;
+    $form['data_table']['#type'] = 'hidden';
   }
 
   $form['type'] = array(
@@ -348,10 +450,25 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
-    '#weight' => 4,
+    '#weight' => 6,
   );
+
   return $form;
 }
+
+
+/**
+* Helper function for sorting entry weights.
+*/
+function flag_lists_form_weight_arraysort($a, $b) {
+  if (isset($a['weight']) && isset($b['weight'])) {
+    return $a['weight'] < $b['weight'] ? -1 : 1;
+  }
+  return 0;
+}
+
+
+
 
 function flag_lists_form_date_callback($form, $form_state){
   return $form['dates'];
@@ -385,7 +502,6 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
   }
 
   if (!empty($form_state['values']['edit'])) {
-    // Editing the title.
     $flag = flag_lists_get_flag($form_state['values']['name']);
     $flag->title = $form_state['values']['title'];
     $flag->description = $form_state['values']['description'];
@@ -396,7 +512,10 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->departure_node = $form_state['values']['departure_node'];
     flag_lists_set_messages($flag);
     flag_lists_save($flag);
+    flag_lists_node_list_save_weight($flag, $form_state['input']['data_table']);
+    flag_lists_get_distance($id = NULL, $flag, $action = 'renew');
     _flag_lists_clear_cache();
+
   }
   else {
     // New flag. Load the template row.
@@ -406,10 +525,8 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $query->fields('f')
       ->fields('fl')
       ->condition('fl.type', $type);
-
     $row = $query->execute()
       ->fetchObject();
-
     $newflag = flag_flag::factory_by_entity_type('node');
 
     $flag = $newflag->factory_by_row($row);

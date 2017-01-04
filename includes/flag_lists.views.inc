@@ -370,6 +370,25 @@ function flag_lists_views_data() {
         'handler' => 'views_handler_sort',
       ),
     ),
+
+    'weight' => array(
+      'title' => t('List items weight'),
+      'help' => t('The Sort order for the list items'),
+      'field' => array(
+      'handler' => 'views_handler_field_numeric',
+        'click sortable' => TRUE,
+      ),
+      'filter' => array(
+        'handler' => 'views_handler_filter_numeric',
+        'allow empty' => TRUE,
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_numeric',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
   );
 
   // Flag_lists_types data

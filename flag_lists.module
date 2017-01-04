@@ -165,7 +165,6 @@ function flag_lists_create_link() {
 }
 
 function flag_lists_set_date($id = NULL, $flag, $action ) {
-
   //if we have an ID we flag a new node
   if ($id && $action == 'flag' && $flag->manual_date == 0) {
     $flag_node = node_load($id);
@@ -180,9 +179,7 @@ function flag_lists_set_date($id = NULL, $flag, $action ) {
         ))
         ->condition('fid', $flag->fid)
         ->execute();
-
     }
-
     if ($flag_end_year < $new_node_year || $flag_end_year == '') {
       $date_update = db_update('flag_lists_flags')
         ->fields(array(
@@ -193,6 +190,142 @@ function flag_lists_set_date($id = NULL, $flag, $action ) {
     }
   }
 
+  if ($id && $action == 'unflag' && $flag->manual_date == 0) {
+    $query = db_select('flag_lists_content', 'flc');
+    $query->join('field_data_field_jahr', 'nj', 'flc.entity_id = nj.entity_id');
+    $query
+      ->fields('nj', array('field_jahr_value'))
+      ->fields('flc', array('entity_id'))
+      ->condition('fid', $flag->fid, '=');
+    $result = $query->execute();
+
+    while ($flag_nodes = $result->fetchAssoc()){
+      $flag_nodes_list[$flag_nodes['entity_id']] = $flag_nodes['field_jahr_value'];
+    }
+    asort($flag_nodes_list);
+    $flag_start_year['start'] = reset($flag_nodes_list);
+    $flag_end_year['end'] = end($flag_nodes_list);
+
+    $date_update = db_update('flag_lists_flags')
+      ->fields(array(
+        'period_start' => $flag_start_year['start'],
+        'period_end' => $flag_end_year['end'],
+      ))
+      ->condition('fid', $flag->fid)
+      ->execute();
+  }
+
+  if ($id == NULL && $action == 'renew') {
+    $query = db_select('flag_lists_content', 'flc');
+    $query->join('field_data_field_jahr', 'nj', 'flc.entity_id = nj.entity_id');
+    $query
+      ->fields('nj', array('field_jahr_value'))
+      ->fields('flc', array('entity_id'))
+      ->condition('fid', $flag->fid, '=');
+    $result = $query->execute();
+
+    while ($flag_nodes = $result->fetchAssoc()){
+      $flag_nodes_list[$flag_nodes['entity_id']] = $flag_nodes['field_jahr_value'];
+    }
+    asort($flag_nodes_list);
+    $tour_dates['start'] = reset($flag_nodes_list);
+    $tour_dates['end'] = end($flag_nodes_list);
+    return $tour_dates;
+  }
+
+}
+
+function flag_lists_get_distance($id = NULL, $flag, $action ) {
+  $fid = $flag->fid;
+  $query = db_select('flag_lists_content', 'flc');
+  $query->join('field_data_field_position_der_aufnahme', 'pda', 'flc.entity_id = pda.entity_id');
+  $query
+    ->fields('pda', array('field_position_der_aufnahme_lat'))
+    ->fields('pda', array('field_position_der_aufnahme_lng'))
+    ->fields('flc', array('entity_id'))
+    ->fields('flc', array('weight'))
+    ->fields('flc', array('timestamp'))
+    ->orderBy('weight', 'ASC')
+    ->orderBy('timestamp', 'ASC')
+    ->condition('fid', $fid, '=');
+  $result = $query->execute();
+
+  while ($flag_positions = $result->fetchAssoc()) {
+    $flag_positions_list[$flag_positions['entity_id']] = array('lat' => $flag_positions['field_position_der_aufnahme_lat'], 'lng' => $flag_positions['field_position_der_aufnahme_lng']);
+  }
+  $google_parameter['origin'] = reset($flag_positions_list);
+  $google_parameter['destination'] = end($flag_positions_list);
+
+  foreach ($flag_positions_list as $flag_position_key => $flag_position){
+    if ($flag_position == $google_parameter['origin']){
+    }
+    else if ($flag_position == $google_parameter['destination']){
+    }
+    else{
+      $google_parameter['waypoint'][] = $flag_position;
+    }
+  }
+  $google_parameter_string = 'origin=' . $google_parameter['origin']['lat'] . ',' . $google_parameter['origin']['lng'] . '&destination=' . $google_parameter['destination']['lat'] . ',' . $google_parameter['destination']['lng'];
+
+  if (isset($google_parameter['waypoint'])) {
+    $waypoints = '';
+    foreach ($google_parameter['waypoint'] as $waypoint) {
+
+      $waypoints = $waypoints . $waypoint['lat'] . ',' . $waypoint['lng'] . '|';
+    }
+    $google_parameter_string = $google_parameter_string . '&waypoints=' . $waypoints;
+  }
+
+  $google_directions_base_url = "http://maps.googleapis.com/maps/api/directions/json?mode=walking&sensor=false&";
+  $google_directions_url = $google_directions_base_url . $google_parameter_string;
+  $jsonfile = file_get_contents($google_directions_url);
+  $jsondata = json_decode($jsonfile);
+  $tour_distance = 0;
+  foreach ($jsondata->routes[0]->legs as $step) {
+    $tour_distance = $tour_distance + $step->distance->value;
+  }
+
+  $distance_update = db_update('flag_lists_flags')
+    ->fields(array(
+      'tour_distance' => $tour_distance,
+    ))
+    ->condition('fid', $fid)
+    ->execute();
+  return $tour_distance;
+}
+
+function flag_lists_get_node_list_edit_values($flag) {
+  $query = db_select('flag_lists_content', 'flc');
+  //$query->join('field_data_field_position_der_aufnahme', 'pda', 'flc.entity_id = pda.entity_id');
+  $query
+    ->fields('flc', array('entity_id'))
+    ->fields('flc', array('timestamp'))
+    ->orderBy('weight', 'ASC')
+    ->orderBy('timestamp', 'ASC')
+    ->condition('fid', $flag->fid, '=');
+  $result = $query->execute();
+
+  while ($flag_node = $result->fetchAssoc()) {
+    $flag_node_detail = node_load($flag_node['entity_id']);
+    $flag_node_detail_list[$flag_node['entity_id']] = array(
+      'entity_id' => $flag_node['entity_id'],
+      'weight' => isset($flag_node['weight']) ? $flag_node['weight'] : 0,
+      'node_details' => $flag_node_detail,
+    );
+  }
+  return $flag_node_detail_list;
+}
+
+function flag_lists_node_list_save_weight($flag, $weight) {
+  foreach ($weight as $node_id => $node_value ) {
+    $weight_update = db_update('flag_lists_content')
+      ->fields(array(
+        'weight' => $node_value['weight'],
+      ))
+      ->condition('fid', $flag->fid)
+      ->condition('entity_id', $node_id)
+      ->execute();
+  }
 }
 
 
@@ -1596,6 +1729,9 @@ function flag_lists_do_flag($flag, $action, $entity_id, $account = NULL, $skip_p
     if ($flagged) {
       $fcid = _flag_lists_unflag($flag, $entity_id, $uid, $sid);
       module_invoke_all('flag_unflag', $flag, $entity_id, $account, $fcid);
+      flag_lists_set_date($entity_id, $flag, $action);
+      flag_lists_get_distance($id = NULL, $flag, $action);
+
       return TRUE;
     }
   }
@@ -1603,9 +1739,8 @@ function flag_lists_do_flag($flag, $action, $entity_id, $account = NULL, $skip_p
     if (!$flagged) {
       $fcid = _flag_lists_flag($flag, $entity_id, $uid, $sid);
       module_invoke_all('flag_flag', $flag, $entity_id, $account, $fcid);
-
       flag_lists_set_date($entity_id, $flag, $action);
-
+      flag_lists_get_distance($id = NULL, $flag, $action);
 
       return TRUE;
     }
