@@ -50,7 +50,7 @@ function flag_lists_schema() {
       // Daniel Frings: add the custom fields for future_history touren function
       'description' => array(
         'type' => 'varchar',
-        'length' => '400',
+        'length' => '600',
         'not null' => FALSE,
         'default' => '',
       ),

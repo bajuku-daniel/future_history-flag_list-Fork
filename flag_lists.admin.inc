@@ -235,8 +235,8 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#type' => 'textarea',
     '#title' => t('Description'),
     '#default_value' => empty($flag->description) ? '' : $flag->description,
-    '#description' => t('A Description for this @name Tour. Limit to 400 characters.', array('@name' => variable_get('flag_lists_name', 'list'))),
-    '#maxlength' => 400,
+    '#description' => t('A Description for this @name Tour. Limit to 600 characters.', array('@name' => variable_get('flag_lists_name', 'list'))),
+    '#maxlength' => 600,
     '#maxlength_js' => TRUE,
     '#required' => TRUE,
     '#access' => empty($flag->locked['title']),
@@ -468,8 +468,8 @@ function flag_lists_form_validate($form, $form_state) {
   if (drupal_strlen($form_state['values']['title']) > 45) {
     form_set_error('name', t('The @name title may only be 45 characters long.', array('@name' => variable_get('flag_lists_name', 'list'))));
   }
- if (drupal_strlen($form_state['values']['description']) > 400) {
-    form_set_error('name', t('The @name description may only be 400 characters long.', array('@name' => variable_get('flag_lists_name', 'list'))));
+ if (drupal_strlen($form_state['values']['description']) > 600) {
+    form_set_error('name', t('The @name description may only be 600 characters long.', array('@name' => variable_get('flag_lists_name', 'list'))));
   }
   // Ensure the machine name is unique.
   if (!$form_state['values']['edit']) {

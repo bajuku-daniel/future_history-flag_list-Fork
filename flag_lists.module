@@ -68,7 +68,7 @@ function flag_lists_menu() {
     );
   }
   $items['flag-lists/add/%'] = array(
-    'title' => 'Add a list',
+    'title' => 'Tour erstellen',
     'page callback' => 'flag_lists_add',
     'page arguments' => array(2),
     'access callback' => 'user_access',
@@ -87,6 +87,16 @@ function flag_lists_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['flag-lists/links/js'] = array(
+    'title' => 'Add a list',
+    'page callback' => 'flag_lists_create_links_js',
+    //'page arguments' => array(),
+    'access callback' => 'user_access',
+    'access arguments' => array('create flag lists'),
+    //'file' => 'flag_lists.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   // Callback for autocomplete of lists in views filter
   $items['flag-lists/autocomplete_list_callback'] = array(
     'title' => 'Find a list',
@@ -98,7 +108,7 @@ function flag_lists_menu() {
   );
 
   $items['flag/lists/edit/%'] = array(
-    'title' => 'Edit a list',
+    'title' => 'Tour bearbeiten',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('flag_lists_form', 3),
     'access callback' => 'flag_lists_is_owner',
@@ -162,6 +172,74 @@ function flag_lists_create_link() {
     'ops' => 0,
     'use_flags' => 0
   ));
+}
+
+/**
+ * Daniel Frings: link create function for the "hinzufügen" overlay in the futurehistory_entdecken.js callback
+ */
+function flag_lists_create_links_js() {
+  $node = $_REQUEST['nid'];;
+  $create = 1;
+  $use_flags = 1;
+  $items = array();
+  // Make sure we have a node.
+  if (!is_object($node) && is_numeric($node)) {
+    $entity_id = $node;
+    $query = db_select('node')->condition('nid', $entity_id);
+    $query->addField('node', 'type');
+    $content_type = $query->execute()->fetchField();
+  }
+  else {
+    return;
+  }
+  // Do we have a list template for this node type, or are we s
+  if (!flag_lists_template_exists($content_type) && !$use_flags) {
+    return;
+  }
+
+  global $user;
+  if ($flags = flag_lists_get_user_flags($content_type, $user, $use_flags)) {
+    // Build the list of lists for this node.
+    foreach ($flags as $flag) {
+      if ($flag->module == 'flag_lists') {
+        $action = _flag_lists_is_flagged($flag, $entity_id, $user->uid, 0) ? 'unflag' : 'flag';
+      }
+      else {
+        $action = $flag->is_flagged($entity_id) ? 'unflag' : 'flag';;
+      }
+      // create the links
+      $link = $flag->theme($action, $entity_id);
+      // If it's a list, fix the link.
+      if ($flag->module == 'flag_lists') {
+        flag_lists_fix_link($link, $action);
+      }
+      $items[] = array(
+        'data' => $link,
+        'id' => $flag->name,
+      );
+    }
+  }
+  krsort($items);
+
+
+  if ($create && flag_lists_template_exists($content_type)) {
+    //$items[] = l(t('Make a new @name', array('@name' => variable_get('flag_lists_name', t('list')))), 'flag-lists/add/' . $content_type . '?destination=/de/fh-entdecken-map/node/' . $node);
+    $items[] = l(t('Make a new @name', array('@name' => variable_get('flag_lists_name', t('list')))), 'flag-lists/add/' . $content_type, array('query' => array('destination' => '/fh-entdecken-map/node/'. $node)));
+  }
+
+  // Return if nothing to display.
+  if (empty($items) || !count($items)) {
+    return ;
+  }
+
+
+  drupal_add_css(drupal_get_path('module', 'flag_lists') . '/theme/flag_lists.css');
+  $links = theme('item_list', array(
+    'items' => $items,
+    'type' => 'ul',
+    'attributes' => array('class' => 'flag-lists-links')
+  ));
+  echo $links;
 }
 
 function flag_lists_set_date($id = NULL, $flag, $action ) {
@@ -232,7 +310,6 @@ function flag_lists_set_date($id = NULL, $flag, $action ) {
     $tour_dates['end'] = end($flag_nodes_list);
     return $tour_dates;
   }
-
 }
 
 function flag_lists_get_distance($id = NULL, $flag, $action ) {
@@ -327,8 +404,6 @@ function flag_lists_node_list_save_weight($flag, $weight) {
       ->execute();
   }
 }
-
-
 
 /**
  * User flag page. Display a list of user-created flag lists.
@@ -686,7 +761,6 @@ function flag_lists_ops_form_ajax_callback(&$form, &$form_state) {
 
 function flag_lists_ops_form_validate($form, &$form_state) {
   global $user;
-
   $error_count = 0;
 
   // Check to see if an items are selected, if not fail right away.
@@ -1172,6 +1246,7 @@ function flag_lists_get_user_flags($content_type = NULL, $account = NULL, $use_f
 
   $result = $query->execute();
   foreach ($result as $row) {
+
     if (!isset($lists[$row->name])) {
       $lists[$row->name] = flag_flag::factory_by_row($row);
       $lists[$row->name]->module = 'flag_lists';
@@ -1180,6 +1255,7 @@ function flag_lists_get_user_flags($content_type = NULL, $account = NULL, $use_f
       $lists[$row->name]->types[] = $row->type;
     }
   }
+
   // Get regular flags.
   if ($use_flags) {
     $flags = flag_get_flags('node', $content_type, $account);
@@ -1300,7 +1376,7 @@ function theme_flag_lists_list($variables) {
 
   // Return if nothing to display.
   if (empty($items) || !count($items)) {
-    return;
+    return ;
   }
 
   drupal_add_css(drupal_get_path('module', 'flag_lists') . '/theme/flag_lists.css');
