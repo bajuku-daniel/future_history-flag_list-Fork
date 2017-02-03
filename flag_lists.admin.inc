@@ -534,6 +534,7 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->tour_distance = $form_state['values']['tour_distance'];
     $flag->departure_node = $form_state['values']['departure_node'];
     flag_lists_set_messages($flag);
+    drupal_set_message(t('New Tour added'));
     // Save it.
     flag_lists_save($flag, $account);
 
