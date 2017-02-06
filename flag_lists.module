@@ -1660,7 +1660,7 @@ function flag_lists_fl_delete($flag, $account = NULL) {
   $flag->is_deleted = TRUE;
   module_invoke_all('flag_lists', $flag, $account);
   _flag_lists_clear_cache();
-  drupal_set_message(t('The @name @title has been deleted.', array('@name' => variable_get('flag_lists_name', 'list'), '@title' => $flag->title)));
+  //drupal_set_message(t('The @name @title has been deleted.', array('@name' => variable_get('flag_lists_name', 'list'), '@title' => $flag->title)));
 }
 
 
