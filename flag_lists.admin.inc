@@ -356,6 +356,14 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#size' => 10,
     '#weight' => 4,
   );
+  // 
+  // $form['remove_node_ids'] = array(
+  //   '#type' => 'textfield',
+  //   '#title' => t('Items to remove from Tour'),
+  //   '#required' => FALSE,
+  //   '#access' => empty($flag->locked['title']),
+  //   '#disabled' => FALSE,
+  // );
 
 
   /*
@@ -374,12 +382,18 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   // Collect our data.
   if (isset($flag)) {
     $table_data = flag_lists_get_node_list_edit_values($flag);
+
     foreach ($table_data as $node_detail) {
       $node_id = $node_detail['entity_id'];
+      $stadt_term = taxonomy_term_load($node_detail['node_details']->field_stadt['und'][0]['tid']);
+      $stadt = $stadt_term->name;
       $data[$node_id] = array(
         'weight' => $node_detail['weight'],
         'name' => $node_detail['node_details']->title,
+        'lat' => $node_detail['node_details']->field_position_der_aufnahme['und'][0]['lat'],
+        'lng' => $node_detail['node_details']->field_position_der_aufnahme['und'][0]['lng'],
         'picture' => theme('image_style', array('path' => $node_detail['node_details']->field_bild['und'][0]['uri'], 'style_name' => 'thumbnail')),
+        'stadt' => $stadt,
       );
     }
     // Build the rows.
@@ -404,8 +418,14 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
           $entry['picture'],
           // Name textfield.
           check_plain($entry['name']),
+          $entry['stadt'],
+
         ),
+
         'class' => array('draggable'),
+        'id' => $id,
+        'lat_value' => $entry['lat'],
+        'lng_value' => $entry['lng'],
       );
       // Build rows of the form elements in the table.
       $row_elements[$id] = array(
@@ -413,6 +433,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       //  'name' => &$rows[$id]['data'][2]['data'],
       );
     }
+
     // Add the table to the form.
     $form['data_table']['table'] = array(
       '#theme' => 'table',
@@ -424,6 +445,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
         array('data' => NULL, 'colspan' => 2),
         t('Picture'),
         t('Name'),
+        t('Stadt'),
       ),
       '#rows' => $rows,
       '#empty' => t('There are no entries available.'),
@@ -434,6 +456,13 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   }
 
 
+  $form['#attached']['js'][] = drupal_get_path('module', 'flag_lists') . '/js/flag_lists_map.js';
+
+  $form['googlemap'] = array(
+    '#prefix' => '<div id="futurehistory-tour-edit-map" class="futurehistory" style="width:100%;height:700px;display:block;margin-bottom:50px;margin-top:30px;">',
+    '#suffix' => '</div>',
+    '#weight' => 6,
+  );
 
   if ($form['edit']['#value'] == FALSE) {
     $form['dates']['period_start']['#type'] = 'hidden';
@@ -442,6 +471,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     $form['manual_date']['#type'] = 'hidden';
     $form['tour_distance']['#disabled'] = FALSE;
     $form['data_table']['#type'] = 'hidden';
+    $form['googlemap']['#type'] = 'hidden';
   }
 
   $form['type'] = array(
@@ -451,7 +481,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
-    '#weight' => 6,
+    '#weight' => 7,
   );
   return $form;
 }
