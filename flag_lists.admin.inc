@@ -356,7 +356,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#size' => 10,
     '#weight' => 4,
   );
-  // 
+  //
   // $form['remove_node_ids'] = array(
   //   '#type' => 'textfield',
   //   '#title' => t('Items to remove from Tour'),
@@ -387,11 +387,13 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       $node_id = $node_detail['entity_id'];
       $stadt_term = taxonomy_term_load($node_detail['node_details']->field_stadt['und'][0]['tid']);
       $stadt = $stadt_term->name;
+
       $data[$node_id] = array(
         'weight' => $node_detail['weight'],
         'name' => $node_detail['node_details']->title,
         'lat' => $node_detail['node_details']->field_position_der_aufnahme['und'][0]['lat'],
         'lng' => $node_detail['node_details']->field_position_der_aufnahme['und'][0]['lng'],
+        'year' => $node_detail['node_details']->field_jahr['und'][0]['value'],
         'picture' => theme('image_style', array('path' => $node_detail['node_details']->field_bild['und'][0]['uri'], 'style_name' => 'thumbnail')),
         'stadt' => $stadt,
       );
@@ -417,7 +419,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
           // Entry picture.
           $entry['picture'],
           // Name textfield.
-          check_plain($entry['name']),
+          check_plain($entry['name']) . ' | ' . $entry['year'],
           $entry['stadt'],
 
         ),
@@ -426,6 +428,8 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
         'id' => $id,
         'lat_value' => $entry['lat'],
         'lng_value' => $entry['lng'],
+        'name' =>   check_plain($entry['name']),
+        'year' => $entry['year'],
       );
       // Build rows of the form elements in the table.
       $row_elements[$id] = array(
@@ -444,7 +448,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
         // We need two empty columns for the weigth field and the cross.
         array('data' => NULL, 'colspan' => 2),
         t('Picture'),
-        t('Name'),
+        t('Name | Jahr'),
         t('Stadt'),
       ),
       '#rows' => $rows,
@@ -455,7 +459,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
 
   }
 
-
+  $form['#attached']['css'][] = drupal_get_path('module', 'flag_lists') . '/css/flag_lists.css';
   $form['#attached']['js'][] = drupal_get_path('module', 'flag_lists') . '/js/flag_lists_map.js';
 
   $form['googlemap'] = array(

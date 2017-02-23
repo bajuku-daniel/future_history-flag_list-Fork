@@ -18,9 +18,11 @@
   var pois_by_nid = [];
   var mapCenter;
   var allTourMarker = [];
+  var info_content = [];
   var mapUpdate = 0;
   var directionsService = new google.maps.DirectionsService;
   var directionsDisplay = new google.maps.DirectionsRenderer;
+  var infowindow = new google.maps.InfoWindow();
 
 
 
@@ -32,6 +34,8 @@
           lat: $(this).attr('lat_value'),
           lng: $(this).attr('lng_value'),
           nid: $(this).attr('id'),
+          name: $(this).attr('name'),
+          year: $(this).attr('year'),
         });
       }
     });
@@ -54,7 +58,9 @@
         tour_pois.push({
           lat: edit_tourdata[i]['lat'],
           lng: edit_tourdata[i]['lng'],
-          nid: edit_tourdata[i]['nid']
+          nid: edit_tourdata[i]['nid'],
+          name: edit_tourdata[i]['name'],
+          year: edit_tourdata[i]['year']
         });
         // overwrite with 0 in next step - than we have a tour - otherway we have a single poi :)
         var one_poi = 1;
@@ -64,7 +70,9 @@
         tour_pois.push({
           lat: edit_tourdata[i]['lat'],
           lng: edit_tourdata[i]['lng'],
-          nid: edit_tourdata[i]['nid']
+          nid: edit_tourdata[i]['nid'],
+          name: edit_tourdata[i]['name'],
+          year: edit_tourdata[i]['year']
         });
         one_poi = 0;
       } else {
@@ -76,15 +84,13 @@
         tour_pois.push({
           lat: edit_tourdata[i]['lat'],
           lng: edit_tourdata[i]['lng'],
-          nid: edit_tourdata[i]['nid']
+          nid: edit_tourdata[i]['nid'],
+          name: edit_tourdata[i]['name'],
+          year: edit_tourdata[i]['year']
         });
       }
     }
     // check if we have more than one poi in our tour
-    console.log(waypts);
-    console.log(my_origin)
-    console.log(my_destination)
-
     if (one_poi == 0) {
       directionsService.route({
         origin: my_origin,
@@ -103,17 +109,19 @@
       var poiPosition = new google.maps.LatLng(tour_pois[0]['lat'],tour_pois[0]['lng']);
       Drupal.futurehistoryTouEditMap.map.panTo(poiPosition);
     }
-
     for (var i = 0; i < tour_pois.length; i++) {
       var poiPosition = new google.maps.LatLng(tour_pois[i]['lat'],tour_pois[i]['lng']);
       var poiId = tour_pois[i]['nid'];
+      var poi_year = tour_pois[i]['year'];
+      var poi_name = tour_pois[i]['name'];
+      var title = poi_name + ' | ' + poi_year;
       Drupal.futurehistoryTourEditMap.marker = new google.maps.Marker({
+        //title: title,
+        id: poiId,
         position: poiPosition,
         map: Drupal.futurehistoryTourEditMap.map,
         icon: fh_marker_blue,
-        id: poiId,
       });
-
       //add the marker hover listner
       google.maps.event.addListener(Drupal.futurehistoryTourEditMap.marker, 'mouseover', function () {
         hoverThumb('hover',this.id);
@@ -125,6 +133,7 @@
       });
 
       //put all markers in our tour array
+      info_content[poiId] = '<span class="marker_edit_name">' + poi_name + '</span> | <span class="marker_edit_year"> ' + poi_year + '</span>';
       allTourMarker.push(Drupal.futurehistoryTourEditMap.marker);
     }
   }
@@ -145,10 +154,14 @@
       if (id === allTourMarker[i].id) {
         if (action == 'hover'){
           allTourMarker[i].setIcon(fh_marker_violet);
+          infowindow.setContent(info_content[id]);
+
+          infowindow.open(Drupal.futurehistoryTourEditMap.map, allTourMarker[i]);
           break;
         }
         else {
           allTourMarker[i].setIcon(fh_marker_blue);
+          infowindow.close(Drupal.futurehistoryTourEditMap.map, allTourMarker[i]);
           break;
         }
       }
