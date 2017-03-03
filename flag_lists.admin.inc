@@ -459,6 +459,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
 
   }
 
+  $form['#attached']['js'][] = drupal_get_path('module', 'flag_lists') . '/js/infobox.js';
   $form['#attached']['css'][] = drupal_get_path('module', 'flag_lists') . '/css/flag_lists.css';
   $form['#attached']['js'][] = drupal_get_path('module', 'flag_lists') . '/js/flag_lists_map.js';
 
@@ -482,11 +483,23 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#type' => 'hidden',
     '#value' => $type,
   );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save'),
+
+  $form['abort'] = array(
+    '#type' => 'markup',
+    '#markup' => '<a href="#" onclick="window.history.go(-1); return false;" class="btn btn-warning form-submit">Abbrechen</a>',
     '#weight' => 7,
   );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('<span class="icon glyphicon glyphicon-ok" aria-hidden="true"></span> Speichern'),
+    '#weight' => 8,
+    '#attributes' => array(
+      'class' => array('ansicht-submit-green'),
+    ),
+  );
+
+
   return $form;
 }
 

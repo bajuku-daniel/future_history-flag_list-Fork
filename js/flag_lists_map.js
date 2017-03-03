@@ -23,6 +23,9 @@
   var directionsService = new google.maps.DirectionsService;
   var directionsDisplay = new google.maps.DirectionsRenderer;
   var infowindow = new google.maps.InfoWindow();
+  var infoBox = new InfoBox();
+
+
 
 
 
@@ -36,6 +39,7 @@
           nid: $(this).attr('id'),
           name: $(this).attr('name'),
           year: $(this).attr('year'),
+          image: $(this).find('img').attr('src'),
         });
       }
     });
@@ -60,7 +64,9 @@
           lng: edit_tourdata[i]['lng'],
           nid: edit_tourdata[i]['nid'],
           name: edit_tourdata[i]['name'],
-          year: edit_tourdata[i]['year']
+          year: edit_tourdata[i]['year'],
+          image: edit_tourdata[i]['image']
+
         });
         // overwrite with 0 in next step - than we have a tour - otherway we have a single poi :)
         var one_poi = 1;
@@ -72,7 +78,8 @@
           lng: edit_tourdata[i]['lng'],
           nid: edit_tourdata[i]['nid'],
           name: edit_tourdata[i]['name'],
-          year: edit_tourdata[i]['year']
+          year: edit_tourdata[i]['year'],
+          image: edit_tourdata[i]['image']
         });
         one_poi = 0;
       } else {
@@ -86,7 +93,8 @@
           lng: edit_tourdata[i]['lng'],
           nid: edit_tourdata[i]['nid'],
           name: edit_tourdata[i]['name'],
-          year: edit_tourdata[i]['year']
+          year: edit_tourdata[i]['year'],
+          image: edit_tourdata[i]['image']
         });
       }
     }
@@ -114,6 +122,7 @@
       var poiId = tour_pois[i]['nid'];
       var poi_year = tour_pois[i]['year'];
       var poi_name = tour_pois[i]['name'];
+      var image = tour_pois[i]['image'];
       var title = poi_name + ' | ' + poi_year;
       Drupal.futurehistoryTourEditMap.marker = new google.maps.Marker({
         //title: title,
@@ -129,11 +138,11 @@
       });
       google.maps.event.addListener(Drupal.futurehistoryTourEditMap.marker, 'mouseout', function () {
         hoverThumb('out',this.id);
-        hoverMarker('out',this.id);
+        hoverMarker('out',this.id)
       });
 
       //put all markers in our tour array
-      info_content[poiId] = '<span class="marker_edit_name">' + poi_name + '</span> | <span class="marker_edit_year"> ' + poi_year + '</span>';
+      info_content[poiId] = '<span class="marker_edit_image"><img src="'+image+'""/></span><span class="marker_content"><span class="marker_edit_name">' + poi_name + '</span> | <span class="marker_edit_year"> ' + poi_year + '</span></span>';
       allTourMarker.push(Drupal.futurehistoryTourEditMap.marker);
     }
   }
@@ -149,19 +158,40 @@
   }
 
   // hover the map marker
+
   function hoverMarker(action, id) {
+    var infoBoxOptions = {
+         //content: 'dummy'
+        disableAutoPan: false
+        ,maxWidth: 0
+        ,pixelOffset: new google.maps.Size(0, 0)
+        ,zIndex: null
+        ,boxStyle: {
+          background: "#ffffff"
+          ,opacity: 0.85
+          ,width: "270px"
+         }
+        ,closeBoxMargin: "10px 2px 2px 2px"
+        ,closeBoxURL: ""
+        ,infoBoxClearance: new google.maps.Size(1, 1)
+        ,isHidden: false
+        ,pane: "floatPane"
+        ,enableEventPropagation: false
+      };
+      infoBox.setOptions(infoBoxOptions)
+
     for ( var i = 0; i< allTourMarker.length; i++) {
       if (id === allTourMarker[i].id) {
-        if (action == 'hover'){
-          allTourMarker[i].setIcon(fh_marker_violet);
-          infowindow.setContent(info_content[id]);
 
-          infowindow.open(Drupal.futurehistoryTourEditMap.map, allTourMarker[i]);
+        if (action == 'hover'){
+          infoBox.setContent(info_content[id]);
+          infoBox.open(Drupal.futurehistoryTourEditMap.map, allTourMarker[i]);
+          allTourMarker[i].setIcon(fh_marker_violet);
           break;
         }
         else {
+          infoBox.close(Drupal.futurehistoryTourEditMap.map, allTourMarker[i]);
           allTourMarker[i].setIcon(fh_marker_blue);
-          infowindow.close(Drupal.futurehistoryTourEditMap.map, allTourMarker[i]);
           break;
         }
       }

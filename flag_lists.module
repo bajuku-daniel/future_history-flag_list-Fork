@@ -330,37 +330,61 @@ function flag_lists_get_distance($id = NULL, $flag, $action ) {
   while ($flag_positions = $result->fetchAssoc()) {
     $flag_positions_list[$flag_positions['entity_id']] = array('lat' => $flag_positions['field_position_der_aufnahme_lat'], 'lng' => $flag_positions['field_position_der_aufnahme_lng']);
   }
-  $google_parameter['origin'] = reset($flag_positions_list);
-  $google_parameter['destination'] = end($flag_positions_list);
 
-  foreach ($flag_positions_list as $flag_position_key => $flag_position){
-    if ($flag_position == $google_parameter['origin']){
-    }
-    else if ($flag_position == $google_parameter['destination']){
-    }
-    else{
-      $google_parameter['waypoint'][] = $flag_position;
-    }
-  }
-  $google_parameter_string = 'origin=' . $google_parameter['origin']['lat'] . ',' . $google_parameter['origin']['lng'] . '&destination=' . $google_parameter['destination']['lat'] . ',' . $google_parameter['destination']['lng'];
+  $google_10_array = array_chunk($flag_positions_list,10, true);
 
-  if (isset($google_parameter['waypoint'])) {
-    $waypoints = '';
-    foreach ($google_parameter['waypoint'] as $waypoint) {
-
-      $waypoints = $waypoints . $waypoint['lat'] . ',' . $waypoint['lng'] . '|';
-    }
-    $google_parameter_string = $google_parameter_string . '&waypoints=' . $waypoints;
-  }
-
-  $google_directions_base_url = "http://maps.googleapis.com/maps/api/directions/json?mode=walking&sensor=false&";
-  $google_directions_url = $google_directions_base_url . $google_parameter_string;
-  $jsonfile = file_get_contents($google_directions_url);
-  $jsondata = json_decode($jsonfile);
   $tour_distance = 0;
-  foreach ($jsondata->routes[0]->legs as $step) {
-    $tour_distance = $tour_distance + $step->distance->value;
+  $second_run = 0;
+
+  foreach ($google_10_array as $flag_positions) {
+    if ($second_run == 0) {
+      $google_parameter['origin'] = reset($flag_positions);
+      $google_parameter['destination'] = end($flag_positions);
+    } else {
+      $google_parameter['origin'] = $google_parameter['destination'];
+      $google_parameter['destination'] = end($flag_positions);
+      unset($google_parameter['waypoint']);
+    }
+
+    foreach ($flag_positions as $flag_position){
+      if ($flag_position == $google_parameter['origin']){
+      }
+      else if ($flag_position == $google_parameter['destination']){
+      }
+      else{
+        $google_parameter['waypoint'][] = $flag_position;
+      }
+    }
+    $google_parameter_string = 'origin=' . $google_parameter['origin']['lat'] . ',' . $google_parameter['origin']['lng'] . '&destination=' . $google_parameter['destination']['lat'] . ',' . $google_parameter['destination']['lng'];
+
+    if (isset($google_parameter['waypoint'])) {
+      $waypoints = '';
+      foreach ($google_parameter['waypoint'] as $waypoint) {
+        $waypoints = $waypoints . $waypoint['lat'] . ',' . $waypoint['lng'] . '|';
+      }
+      $google_parameter_string = $google_parameter_string . '&waypoints=' . $waypoints;
+    }
+
+    $google_directions_base_url = "http://maps.googleapis.com/maps/api/directions/json?mode=walking&sensor=false&";
+    $google_directions_url = $google_directions_base_url . $google_parameter_string;
+
+    dsm($google_directions_url);
+
+    $jsonfile = file_get_contents($google_directions_url);
+    $jsondata = json_decode($jsonfile);
+
+    dsm($jsondata->routes[0]->legs);
+
+    foreach ($jsondata->routes[0]->legs as $step) {
+      $tour_distance = $tour_distance + $step->distance->value;
+    }
+
+    $second_run = 1;
+
   }
+
+
+
 
   $distance_update = db_update('flag_lists_flags')
     ->fields(array(

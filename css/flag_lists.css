@@ -1,6 +1,24 @@
+
+
 #futurehistory-tour-edit-map .marker_edit_name {
   font-weight:bold;
 }
 #futurehistory-tour-edit-map .marker_edit_year {
   color: #954e94;
+}
+
+#futurehistory-tour-edit-map .marker_edit_image {
+  margin-right:5px;
+}
+
+#futurehistory-tour-edit-map .marker_edit_image img {
+  max-width: 100px;
+  max-height: 70px;
+}
+
+.btn-warning, .page-node-edit .btn-warning:hover {
+    color: #ffffff;
+    background-color: #954e94!important;
+    border-color: #954e94!important;
+    margin-right: 4px;
 }
