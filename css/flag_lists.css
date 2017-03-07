@@ -16,6 +16,9 @@
   max-height: 70px;
 }
 
+.tour_edit_header {
+  margin-bottom:40px;
+}
 .btn-warning, .page-node-edit .btn-warning:hover {
     color: #ffffff;
     background-color: #954e94!important;

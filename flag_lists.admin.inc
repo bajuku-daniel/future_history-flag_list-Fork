@@ -217,6 +217,16 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     );
   }
 
+  $tour_link_id = 0;
+  if (isset($flag)) {
+    $tour_link_id = $flag->fid;
+  }
+  $form['header'] = array(
+    '#type' => 'markup',
+    '#markup' => '<div class="tour_edit_header"><h4>Meine Tour bearbeiten</h4><a href="/de/user/touren">Meine Touren auflisten</a> | <a href="/de/flag/lists/' .$tour_link_id. '">Tour anzeigen</a> </div>',
+    '#weight' => -3,
+  );
+
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => t('Title'),
@@ -464,8 +474,8 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   $form['#attached']['js'][] = drupal_get_path('module', 'flag_lists') . '/js/flag_lists_map.js';
 
   $form['googlemap'] = array(
-    '#prefix' => '<div id="futurehistory-tour-edit-map" class="futurehistory" style="width:100%;height:700px;display:block;margin-bottom:50px;margin-top:30px;">',
-    '#suffix' => '</div>',
+    '#type' =>'markup',
+    '#markup' =>'<div id="futurehistory-tour-edit-map" class="futurehistory" style="width:100%;height:700px;display:block;margin-bottom:50px;margin-top:30px;"></div>',
     '#weight' => 6,
   );
 
@@ -477,8 +487,8 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     $form['tour_distance']['#disabled'] = FALSE;
     $form['data_table']['#type'] = 'hidden';
     $form['googlemap']['#type'] = 'hidden';
+    $form['header']['#markup'] = '<div class="tour_edit_header"><h4>Neue Tour erstellen</h4></div>';
   }
-
   $form['type'] = array(
     '#type' => 'hidden',
     '#value' => $type,

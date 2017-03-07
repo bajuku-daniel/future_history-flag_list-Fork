@@ -25,6 +25,11 @@
   var infowindow = new google.maps.InfoWindow();
   var infoBox = new InfoBox();
 
+  var maxTourDistance = 10000;
+
+
+
+
 
 
 
@@ -53,6 +58,9 @@
   function calculateAndDisplayRoute(directionsService, directionsDisplay, edit_tourdata) {
     var waypts = [];
     var tour_pois = [];
+    var initTourDistance = $('input[name=tour_distance]').val();
+
+
     for (var i = 0; i < edit_tourdata.length; i++) {
       if (i === 0) {
         // Start EndPunkt benötigen Datenformat mit lng/lat oder Text e.g. New York,US
@@ -98,25 +106,33 @@
         });
       }
     }
+
     // check if we have more than one poi in our tour
     if (one_poi == 0) {
-      directionsService.route({
-        origin: my_origin,
-        destination: my_destination,
-        waypoints: waypts,
-        optimizeWaypoints: false,
-        travelMode: google.maps.TravelMode.WALKING
-      }, function (response, status) {
-        if (status === google.maps.DirectionsStatus.OK) {
-          directionsDisplay.setDirections(response);
-        } else {
-          window.alert('Directions request failed due to ' + status);
+      if (initTourDistance < maxTourDistance) {
+        directionsService.route({
+          origin: my_origin,
+          destination: my_destination,
+          waypoints: waypts,
+          optimizeWaypoints: false,
+          travelMode: google.maps.TravelMode.WALKING
+        }, function (response, status) {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsDisplay.setDirections(response);
+          } else {
+            window.alert('Directions request failed due to ' + status);
+          }
+        });
+      } else {
+        if ( !$('#tour_warning').length ){
+          $('#futurehistory-tour-edit-map').before( '<p id="tour_warning">Wegstrecke ist größer als 10km - es wird keine Route eingezeichnet</p>');
         }
-      });
+      }
     } else {
       var poiPosition = new google.maps.LatLng(tour_pois[0]['lat'],tour_pois[0]['lng']);
-      Drupal.futurehistoryTouEditMap.map.panTo(poiPosition);
+      Drupal.futurehistoryTourEditMap.map.panTo(poiPosition);
     }
+
     for (var i = 0; i < tour_pois.length; i++) {
       var poiPosition = new google.maps.LatLng(tour_pois[i]['lat'],tour_pois[i]['lng']);
       var poiId = tour_pois[i]['nid'];
@@ -144,6 +160,12 @@
       //put all markers in our tour array
       info_content[poiId] = '<span class="marker_edit_image"><img src="'+image+'""/></span><span class="marker_content"><span class="marker_edit_name">' + poi_name + '</span> | <span class="marker_edit_year"> ' + poi_year + '</span></span>';
       allTourMarker.push(Drupal.futurehistoryTourEditMap.marker);
+
+      var bounds = new google.maps.LatLngBounds();
+      for (var c = 0; c < allTourMarker.length; c++) {
+       bounds.extend(allTourMarker[c].getPosition());
+      }
+      Drupal.futurehistoryTourEditMap.map.fitBounds(bounds);
     }
   }
 
@@ -208,6 +230,7 @@
       $('#futurehistory-tour-edit-map', context).each(function() {
         var $this = $(this);
 
+
         Drupal.futurehistoryTourEditMap = {};
         mapZoom = 16;
 
@@ -233,16 +256,14 @@
         Drupal.futurehistoryTourEditMap.map.setTilt(0);
         showTourOnMap();
 
-        Drupal.tableDrag.prototype.row.prototype.onSwap = function (swappedRow) {
-          (function ($) { // Important as this allows $ for jQuery.
 
-            for (var i = 0; i < allTourMarker.length; i++) {
-              allTourMarker[i].setMap(null);
-            }
-            allTourMarker = [];
 
-            showTourOnMap();
-          }(jQuery));
+        Drupal.tableDrag.prototype.onDrop = function () {
+          for (var i = 0; i < allTourMarker.length; i++) {
+            allTourMarker[i].setMap(null);
+          }
+          allTourMarker = [];
+          showTourOnMap();
         }
 
         //hover the pois function
@@ -258,6 +279,10 @@
          });
 
       }); // end MAP each function
+
+      // if (initTourDistance < maxTourDistance) {
+      //   $( '#futurehistory-tour-edit-map').before( '<p id="tour_warning">Tour Distanz ist größer als 10 000m - es wird keine Route eingezeichnet</p>');
+      // }
 
     }  // end beaviors and atach function
   }
