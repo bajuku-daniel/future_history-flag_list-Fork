@@ -368,12 +368,10 @@ function flag_lists_get_distance($id = NULL, $flag, $action ) {
     $google_directions_base_url = "http://maps.googleapis.com/maps/api/directions/json?mode=walking&sensor=false&";
     $google_directions_url = $google_directions_base_url . $google_parameter_string;
 
-    dsm($google_directions_url);
 
     $jsonfile = file_get_contents($google_directions_url);
     $jsondata = json_decode($jsonfile);
 
-    dsm($jsondata->routes[0]->legs);
 
     foreach ($jsondata->routes[0]->legs as $step) {
       $tour_distance = $tour_distance + $step->distance->value;
