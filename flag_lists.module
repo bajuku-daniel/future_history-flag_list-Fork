@@ -1632,6 +1632,9 @@ function flag_lists_update($flag) {
       'tour_distance' => $flag->tour_distance,
       'manual_date' => $flag->manual_date,
       'name' => $flag->name,
+      'tour_type' => $flag->tour_type,
+      'tour_price' => $flag->tour_price,
+      'android_purchase_id' => $flag->android_purchase_id,
       'options' => $flag->get_serialized_options($flag),
     ))
     ->condition('fid', $flag->fid)
@@ -1654,6 +1657,9 @@ function flag_lists_insert($flag) {
       'period_end' => $flag->period_end,
       'tour_distance' => $flag->tour_distance,
       'manual_date' => $flag->manual_date,
+      'tour_type' => $flag->tour_type,
+      'tour_price' => $flag->tour_price,
+      'android_purchase_id' => $flag->android_purchase_id,
       'options' => $flag->get_serialized_options($flag),
     ))
     ->execute();

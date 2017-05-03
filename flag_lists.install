@@ -78,6 +78,39 @@ function flag_lists_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+
+      'tour_type' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => 0,
+      ),
+      'tour_status' => array(
+        'type' => 'int',
+        'size' => 'small',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'tour_price' => array(
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'android_purchase_id' => array(
+        'type' => 'varchar',
+        'length' => '35',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'tour_deeplink' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
+
       'options' => array(
         'type' => 'text',
         'not null' => FALSE,
@@ -485,4 +518,49 @@ function flag_lists_update_7308() {
       'default' => 0,
     )
   );
+}
+
+/**
+ * Daniel Frings: add new fields for the commercial Tour types
+ */
+function flag_lists_update_7309() {
+  $fields = array(
+    'tour_type' => array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => FALSE,
+      'default' => 0,
+    ),
+    'tour_status' => array(
+      'type' => 'int',
+      'size' => 'small',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 1,
+    ),
+    'tour_price' => array(
+      'type' => 'varchar',
+      'length' => '10',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+    'android_purchase_id' => array(
+      'type' => 'varchar',
+      'length' => '35',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+    'tour_deeplink' => array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+      'default' => '',
+    )
+  );
+
+  foreach ($fields as $key => $field)  {
+    if (!db_field_exists('flag_lists_flags', $key)) {
+      db_add_field('flag_lists_flags', $key, $field);
+    }
+  }
 }

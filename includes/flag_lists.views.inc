@@ -306,6 +306,41 @@ function flag_lists_views_data() {
         'handler' => 'views_handler_sort',
       ),
     ),
+    'tour_type' => array(
+      'title' => t('Tour Type'),
+      'help' => t('The Tour Type as INT'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    'android_purchase_id' => array(
+      'title' => t('Tour Purchase ID'),
+      'help' => t('The Tour Purchase ID for the Appstore'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+
     'edit_list' => array(
       'field' => array(
         'title' => t('Edit link'),

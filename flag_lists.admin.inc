@@ -216,11 +216,11 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#value' => NULL,
     );
   }
-
   $tour_link_id = 0;
   if (isset($flag)) {
     $tour_link_id = $flag->fid;
   }
+
   $form['header'] = array(
     '#type' => 'markup',
     '#markup' => '<div class="tour_edit_header"><h4>Meine Tour bearbeiten</h4><a href="/de/user/touren">Meine Touren auflisten</a> | <a href="/de/flag/lists/' .$tour_link_id. '">Tour anzeigen</a> </div>',
@@ -466,7 +466,6 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#attributes' => array('id' => 'entry-order'),
     );
     drupal_add_tabledrag('entry-order', 'order', 'sibling', 'entry-order-weight');
-
   }
 
   $form['#attached']['js'][] = drupal_get_path('module', 'flag_lists') . '/js/infobox.js';
@@ -479,6 +478,159 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#weight' => 6,
   );
 
+  //Add the comercial tour form fields
+  global $user;
+  $user_roles = $user->roles;
+  $commercial_tour_roles_accepted = array('Touren Anbieter','administrator');
+
+  if (array_intersect($commercial_tour_roles_accepted, $user_roles)) {
+
+    $commercial_tour_id = 0;
+    if (isset($flag)) {
+      $commercial_tour_fid = $flag->fid;
+//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=http://dev-daniel.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+
+      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=http://dev-daniel.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+
+      $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
+    }
+
+    $tour_types = array(
+      '1' => t('Guided Tour'),
+      '2' => t('Selfguided Tour'),
+    );
+
+    if ($flag->tour_type == '0' || empty($flag->tour_type)) {
+      $tour_type_default_value = '1';
+    } else {
+      $tour_type_default_value = $flag->tour_type;
+    }
+
+    $form['tour_type'] = array(
+      '#type' => 'radios',
+      '#title' => t('Commercial Tour Type'),
+      '#options' => $tour_types,
+      '#description' => t('Only for Comercial Tours: select your Tour Type'),
+      '#default_value' => $tour_type_default_value,
+      '#weight' => 7,
+      '#ajax' => array(
+        'callback' => 'flag_lists_form_commercial_tour_callback',
+        'wrapper' => 'commercial_tour',
+      ),
+    );
+
+    $form['commercial_tour'] = array(
+      '#prefix' => '<div id="commercial_tour">',
+      '#suffix' => '</div>',
+      '#type' => 'container',
+      '#description' => t('This is where we put our commercial tour info'),
+      '#weight' => 8,
+    );
+
+    $form['commercial_tour_add_help'] = array(
+      '#type' =>'hidden',
+      '#markup' =>t('<p>All other Commercial Tour Settings are available after first Safe</p>'),
+      '#weight' => 9,
+    );
+
+    if ( (!isset($form_state['values']['tour_type']) && $form['tour_type']['#default_value'] == 2) || (isset($form_state['values']['tour_type']) && $form_state['values']['tour_type'] == 2 )  ) {
+      $form['commercial_tour']['tour_price'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Tour Price'),
+        '#default_value' => empty($flag->tour_price) ? '' : $flag->tour_price,
+        '#description' => t('The Price of the Tour'),
+        '#maxlength' => 8,
+        '#required' => false,
+        '#access' => empty($flag->locked['title']),
+        '#size' => 8,
+        '#weight' => 1,
+        '#disabled' => false,
+      );
+      $form['commercial_tour']['android_purchase_id'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Purchase ID '),
+        '#default_value' => empty($flag->android_purchase_id) ? $commercial_tour_purchase_id : $flag->android_purchase_id,
+        '#description' => t('Purchase ID for the APP Store'),
+        '#maxlength' => 32,
+        '#required' => false,
+        '#access' => empty($flag->locked['title']),
+        '#size' => 10,
+        '#weight' => 4,
+        '#disabled' => false,
+      );
+    }
+
+    //shorten the tour deeplink with the firebase API
+    $firebas_api_url = 'https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyA48yhSN-9HEswUNK_SpzhbqQO-xq5o2_0';
+    $firebase_data = array('longDynamicLink' => $commercial_tour_deeplink);
+
+    // use key 'http' even if you send the request to https://...
+    $firebase_options = array(
+        'http' => array(
+            'header'  => "application/json\r\n",
+            'method'  => 'POST',
+            'content' => http_build_query($firebase_data)
+        )
+    );
+    $firebase_context  = stream_context_create($firebase_options);
+    $short_deeplink_json = file_get_contents($firebas_api_url, false, $firebase_context);
+    $short_deeplink = json_decode($short_deeplink_json);
+
+    $form['commercial_tour']['tour_deeplink'] = array(
+      '#type' => 'hidden',
+      '#title' => t('Tour Deeplink'),
+      '#default_value' => empty($flag->tour_deeplink) ? $short_deeplink->shortLink : $flag->tour_deeplink,
+      '#description' => t('The deeplink to publish the Tour to your Clients'),
+      '#maxlength' => 255,
+      '#required' => false,
+      '#access' => empty($flag->locked['title']),
+      '#size' => 10,
+      '#weight' => 2,
+      '#disabled' => false,
+    );
+
+    //markup for deeplinks
+    $google_qr_deeplink_url = $short_deeplink->shortLink;
+    $google_qr_image_url = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl='. $google_qr_deeplink_url . '&chld=H|0&choe=UTF-8';
+
+    $google_qr_alt
+      = t('QR Code for @url', array(
+        '@url' => $google_qr_deeplink_url));
+
+    $google_qr_code_img = theme('image', array(
+      'path' => $google_qr_image_url,
+      'alt' => $google_qr_alt,
+      'attributes' => array('class' => 'googleQRcode'),
+    ));
+
+    $tour_deeplink_qr_code_markup = '<label>Tourlink & QR Code</label> <p>Here is your Tour Deeplink: <br><b>' . $google_qr_deeplink_url . '</b><br><small> You can Copy and Paste it to publish your Tour via Email or Whatsapp etc.</small></p><br><p> Or you can easy use our FH - QR Code for print products:<br><br>' . $google_qr_code_img . '<br><br>';
+
+
+    $form['commercial_tour']['tour_deeplink_qr_code'] = array(
+      '#type' =>'markup',
+      '#title' => t('Tour Deeplink & QR Code'),
+      '#markup' => $tour_deeplink_qr_code_markup,
+      '#weight' => 3,
+    );
+
+    $tour_status = array(
+      '0' => t('Inaktiv'),
+      '1' => t('Aktiv'),
+    );
+
+    $form['commercial_tour']['tour_status'] = array(
+      '#type' => 'radios',
+      '#title' => t('Tour Status'),
+      '#description' => t('The Tour Status - can only be change by the FH - Administrator. For change Request please Email to: touren@future-history.eu'),
+      '#options' => $tour_status,
+      '#default_value' => '1',
+      '#weight' => 4,
+      '#disabled' => true,
+    );
+  }
+
   if ($form['edit']['#value'] == FALSE) {
     $form['dates']['period_start']['#type'] = 'hidden';
     $form['dates']['period_end']['#type'] = 'hidden';
@@ -488,6 +640,14 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     $form['data_table']['#type'] = 'hidden';
     $form['googlemap']['#type'] = 'hidden';
     $form['header']['#markup'] = '<div class="tour_edit_header"><h4>Neue Tour erstellen</h4></div>';
+    $form['commercial_tour']['tour_price']['#type'] = 'hidden';
+    $form['commercial_tour']['android_purchase_id']['#type'] = 'hidden';
+    $form['commercial_tour']['tour_deeplink']['#type'] = 'hidden';
+    $form['commercial_tour']['tour_associated_user_uid']['#type'] = 'hidden';
+    $form['commercial_tour']['tour_status']['#type'] = 'hidden';
+    $form['commercial_tour']['tour_deeplink_qr_code']['#type'] = 'hidden';
+    $form['commercial_tour_add_help']['#type']='markup';
+
   }
   $form['type'] = array(
     '#type' => 'hidden',
@@ -497,13 +657,13 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   $form['abort'] = array(
     '#type' => 'markup',
     '#markup' => '<a href="#" onclick="window.history.go(-1); return false;" class="btn btn-warning form-submit">Abbrechen</a>',
-    '#weight' => 7,
+    '#weight' => 10,
   );
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('<span class="icon glyphicon glyphicon-ok" aria-hidden="true"></span> Speichern'),
-    '#weight' => 8,
+    '#weight' => 11,
     '#attributes' => array(
       'class' => array('ansicht-submit-green'),
     ),
@@ -515,6 +675,10 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
 
 function flag_lists_form_date_callback($form, $form_state){
   return $form['dates'];
+}
+
+function flag_lists_form_commercial_tour_callback($form, $form_state){
+  return $form['commercial_tour'];
 }
 
 /**
@@ -553,6 +717,9 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->period_end = $form_state['values']['period_end'];
     $flag->tour_distance = $form_state['values']['tour_distance'];
     $flag->departure_node = $form_state['values']['departure_node'];
+    $flag->tour_type = $form_state['values']['tour_type'];
+    $flag->tour_price = $form_state['values']['tour_price'];
+    $flag->android_purchase_id = $form_state['values']['android_purchase_id'];
     flag_lists_set_messages($flag);
     flag_lists_save($flag);
     flag_lists_node_list_save_weight($flag, $form_state['input']['data_table']);
@@ -590,6 +757,9 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->period_end = $form_state['values']['period_end'];
     $flag->tour_distance = $form_state['values']['tour_distance'];
     $flag->departure_node = $form_state['values']['departure_node'];
+    $flag->tour_type = $form_state['values']['tour_type'];
+    $flag->tour_price = $form_state['values']['tour_price'];
+    $flag->android_purchase_id = $form_state['values']['android_purchase_id'];
     flag_lists_set_messages($flag);
     drupal_set_message(t('New Tour added'));
     // Save it.
