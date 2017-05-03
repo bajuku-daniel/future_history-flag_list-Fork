@@ -1,0 +1,68 @@
+$view = new view();
+$view->name = 'kommerzielle_ansicht_purchase_id_subview';
+$view->description = 'show a list of purchase IDs if the Ansicht is in a selfguidet Tour';
+$view->tag = '';
+$view->base_table = 'node';
+$view->human_name = 'Touren Bereich: Subview -Kommerzielle Ansicht - Purchase ID';
+$view->core = 0;
+$view->api_version = '3.0';
+$view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+/* Display: Defaults */
+$handler = $view->new_display('default', 'Defaults', 'default');
+$handler->display->display_options['use_more_always'] = FALSE;
+$handler->display->display_options['access']['type'] = 'none';
+$handler->display->display_options['cache']['type'] = 'none';
+$handler->display->display_options['query']['type'] = 'views_query';
+$handler->display->display_options['exposed_form']['type'] = 'basic';
+$handler->display->display_options['exposed_form']['options']['reset_button_label'] = 'Zurücksetzen';
+$handler->display->display_options['exposed_form']['options']['exposed_sorts_label'] = 'Sortierung';
+$handler->display->display_options['pager']['type'] = 'none';
+$handler->display->display_options['pager']['options']['offset'] = '0';
+$handler->display->display_options['style_plugin'] = 'views_delimited_list';
+$handler->display->display_options['style_options']['long_count'] = '3';
+$handler->display->display_options['style_options']['separator_two'] = 'delimiter';
+$handler->display->display_options['style_options']['separator_long'] = 'delimiter';
+$handler->display->display_options['row_plugin'] = 'fields';
+$handler->display->display_options['row_options']['default_field_elements'] = FALSE;
+/* Feld: Inhalt: Nid */
+$handler->display->display_options['fields']['nid']['id'] = 'nid';
+$handler->display->display_options['fields']['nid']['table'] = 'node';
+$handler->display->display_options['fields']['nid']['field'] = 'nid';
+$handler->display->display_options['fields']['nid']['label'] = '';
+$handler->display->display_options['fields']['nid']['exclude'] = TRUE;
+$handler->display->display_options['fields']['nid']['element_label_colon'] = FALSE;
+/* Feld: Flag lists: Tour Purchase ID */
+$handler->display->display_options['fields']['android_purchase_id']['id'] = 'android_purchase_id';
+$handler->display->display_options['fields']['android_purchase_id']['table'] = 'flag_lists_flags';
+$handler->display->display_options['fields']['android_purchase_id']['field'] = 'android_purchase_id';
+$handler->display->display_options['fields']['android_purchase_id']['label'] = 'purchase_id';
+$handler->display->display_options['fields']['android_purchase_id']['empty'] = 'NULL';
+$handler->display->display_options['fields']['android_purchase_id']['link_to_list'] = 0;
+/* Contextual filter: Inhalt: Nid */
+$handler->display->display_options['arguments']['nid']['id'] = 'nid';
+$handler->display->display_options['arguments']['nid']['table'] = 'node';
+$handler->display->display_options['arguments']['nid']['field'] = 'nid';
+$handler->display->display_options['arguments']['nid']['exception']['title'] = 'Alle';
+$handler->display->display_options['arguments']['nid']['default_argument_type'] = 'fixed';
+$handler->display->display_options['arguments']['nid']['summary']['number_of_records'] = '0';
+$handler->display->display_options['arguments']['nid']['summary']['format'] = 'default_summary';
+$handler->display->display_options['arguments']['nid']['summary_options']['items_per_page'] = '25';
+
+/* Display: Page */
+$handler = $view->new_display('page', 'Page', 'page_1');
+$handler->display->display_options['path'] = 'tour_purchase_id';
+$translatables['kommerzielle_ansicht_purchase_id_subview'] = array(
+  t('Defaults'),
+  t('more'),
+  t('Apply'),
+  t('Zurücksetzen'),
+  t('Sortierung'),
+  t('Asc'),
+  t('Desc'),
+  t('purchase_id'),
+  t('NULL'),
+  t('Alle'),
+  t('Page'),
+);
+
