@@ -16,6 +16,16 @@
   max-height: 70px;
 }
 
+.form-item-tour-type.form-group, .form-item-tour-price.form-group, .deeplink_wrapper, .qr_code_wrapper, .tour_add_help, .deactivation_message{
+  margin-bottom:50px;
+}
+
+.form-item-android-purchase-id.form-disabled, .form-item-tour-status.form-disabled{
+  display:none;
+}
+
+
+
 .tour_edit_header {
   margin-bottom:40px;
 }

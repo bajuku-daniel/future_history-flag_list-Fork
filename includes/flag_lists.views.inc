@@ -340,7 +340,75 @@ function flag_lists_views_data() {
         'handler' => 'views_handler_sort',
       ),
     ),
-
+    'tour_deeplink' => array(
+      'title' => t('Tour Deeplink'),
+      'help' => t('The Tour Deeplink'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    'tour_status' => array(
+      'title' => t('Tour Status'),
+      'help' => t('The Tour Status: 0=Inactive 1=Active'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    'tour_qrcode' => array(
+      'title' => t('Tour qrcode'),
+      'help' => t('The Tour image path to the qr-code'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    'tour_price' => array(
+      'title' => t('Tour Price'),
+      'help' => t('The Tour price incl MWSt'),
+      'field' => array(
+        'click sortable' => TRUE,
+        'handler' => 'flag_lists_handler_field_list',
+      ),
+      'filter' => array(
+        'handler' => 'flag_lists_handler_filter_list',
+      ),
+      'argument' => array(
+        'handler' => 'views_handler_argument_string',
+      ),
+      'sort' => array(
+        'handler' => 'views_handler_sort',
+      ),
+    ),
+    
     'edit_list' => array(
       'field' => array(
         'title' => t('Edit link'),

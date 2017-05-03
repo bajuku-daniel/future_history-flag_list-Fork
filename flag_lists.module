@@ -1635,6 +1635,10 @@ function flag_lists_update($flag) {
       'tour_type' => $flag->tour_type,
       'tour_price' => $flag->tour_price,
       'android_purchase_id' => $flag->android_purchase_id,
+      'tour_deeplink' => $flag->tour_deeplink,
+      'tour_qrcode' => $flag->tour_qrcode,
+      'tour_status' => $flag->tour_status,
+
       'options' => $flag->get_serialized_options($flag),
     ))
     ->condition('fid', $flag->fid)
@@ -1660,6 +1664,9 @@ function flag_lists_insert($flag) {
       'tour_type' => $flag->tour_type,
       'tour_price' => $flag->tour_price,
       'android_purchase_id' => $flag->android_purchase_id,
+      'tour_deeplink' => $flag->tour_deeplink,
+      'tour_qrcode' => $flag->tour_qrcode,
+      'tour_status' => $flag->tour_status,
       'options' => $flag->get_serialized_options($flag),
     ))
     ->execute();
