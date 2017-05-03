@@ -110,6 +110,12 @@ function flag_lists_schema() {
         'not null' => FALSE,
         'default' => '',
       ),
+      'tour_qrcode' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => FALSE,
+        'default' => '',
+      ),
 
       'options' => array(
         'type' => 'text',
@@ -551,6 +557,12 @@ function flag_lists_update_7309() {
       'default' => '',
     ),
     'tour_deeplink' => array(
+      'type' => 'varchar',
+      'length' => '255',
+      'not null' => FALSE,
+      'default' => '',
+    ),
+    'tour_qrcode' => array(
       'type' => 'varchar',
       'length' => '255',
       'not null' => FALSE,
