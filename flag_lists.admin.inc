@@ -495,10 +495,9 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     if (isset($flag)) {
       $commercial_tour_fid = $flag->fid;
 //      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
-//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
 //      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=http://dev-daniel.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
-
-      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=http://dev.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=http://dev.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
       $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
     }
 
