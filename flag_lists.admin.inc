@@ -223,9 +223,15 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
 
   $form['header'] = array(
     '#type' => 'markup',
-    '#markup' => '<div class="tour_edit_header"><h4>Meine Tour bearbeiten</h4><a href="/de/user/touren">Meine Touren auflisten</a> | <a href="/de/flag/lists/' .$tour_link_id. '">Tour anzeigen</a> </div>',
-    '#weight' => -3,
+    '#markup' => '<div class="tour_edit_header"><h4>Meine Tour bearbeiten</h4><a href="/de/user/touren">Meine Touren auflisten</a> | <a href="/de/flag/lists/' .$tour_link_id. '">Tour anzeigen</a></div>',
+    '#weight' => -4,
   );
+
+    $form['header_commercial'] = array(
+      '#type' => 'markup',
+      '#markup' => '<div class="tour_edit_header_commercial"><a href="#sort_order">Bildreihenfolge bearbeiten</a></div>',
+      '#weight' => -3,
+    );
 
   $form['title'] = array(
     '#type' => 'textfield',
@@ -385,7 +391,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   // Put it into a fieldset for no reason.
   $form['data_table'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Change POI Order'),
+    '#title' => '<span id="sort_order"></span>' . t('Change POI Order'),
     '#weight' => 5,
   );
 
@@ -496,6 +502,10 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
     }
 
+    //change the header with commercial tour anchor
+    $form['header_commercial']['#markup'] = '<div class="tour_edit_header_commercial"><a href="#sort_order">Bildreihenfolge bearbeiten</a> | <a href="#communicate">Tour planen und kommunizieren</a> </div>';
+
+
     $tour_types = array(
       '1' => t('mit Gästeführer (für öffentliche und gebuchte Gruppenführungen)'),
       '2' => t('selbstgeführte App-Tour (für Einzelbucher und Kleingruppen)'),
@@ -509,7 +519,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
 
     $form['tour_type'] = array(
       '#type' => 'radios',
-      '#title' => t('Art der Tour'),
+      '#title' => '<span id="communicate"></span>' . t('Art der Tour'),
       '#options' => $tour_types,
       '#description' => t('Only for Comercial Tours: select your Tour Type'),
       '#default_value' => $tour_type_default_value,
@@ -530,7 +540,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
 
     $form['commercial_tour_add_help'] = array(
       '#type' =>'hidden',
-      '#markup' =>t('<div class="tour_add_help"><p>Die weiteren Einstellungen für Kommerzielle Touren können nach dem ersten Speichern vorgenommen werden.</p></div>'),
+      '#markup' =>t('<div class="tour_add_help"><p>Die weiteren Einstellungen sowie Informationen zur Kommunikation und Veröffentlichung der Touren können nach dem ersten Speichern im Profilbereich unter "Meine Touren" eingesehen werden.</p></div>'),
       '#weight' => 9,
     );
 
@@ -629,7 +639,11 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#weight' => 3,
     );
 
-    $tour_deactivation_markup = '<div class="deactivation_message"><p>Um diese Tour zu Deaktivieren sende bitte eine Email an: <a href="mailto:info@future-history.eu">info@future-history.eu</a>. Wir werden die Tour für dich in den Appstores deaktivieren - die Tour bleibt für Benutzer die sie gekauft haben trotzdem benutzbar.</p></div>';
+
+
+//    $tour_deactivation_markup = '<div class="deactivation_message"><p>Um diese Tour zu Deaktivieren sende bitte eine Email an: <a href="mailto:info@future-history.eu">info@future-history.eu</a>. Wir werden die Tour für dich in den Appstores deaktivieren - die Tour bleibt für Benutzer die sie gekauft haben trotzdem benutzbar.</p></div>';
+    $tour_deactivation_markup = '<div class="deactivation_message"><p>Zur Deaktivierung dieser Tour bitte eine Email an: <a href="touren@future-history.eu">info@future-history.eu</a> senden. Wir werden die Tour anschliessend im Google Play Store und Apple App Store deaktivieren, so dass keine weiteren Käufe möglich sind. Bereits getätigte Käufe dieser Tour bleiben davon unberührt und können weiterhin zum Aufruf der Tour genutzt werden.</p></div>';
+
     $form['commercial_tour']['deactivation_message'] = array(
       '#type' =>'markup',
       '#title' => t('Tour Deeplink & QR Code'),
@@ -680,6 +694,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     $form['data_table']['#type'] = 'hidden';
     $form['googlemap']['#type'] = 'hidden';
     $form['header']['#markup'] = '<div class="tour_edit_header"><h4>Neue Tour erstellen</h4></div>';
+    $form['header_commercial']['#type'] = 'hidden';
     $form['commercial_tour']['tour_price']['#type'] = 'hidden';
     $form['commercial_tour']['android_purchase_id']['#type'] = 'hidden';
     $form['commercial_tour']['tour_deeplink']['#type'] = 'hidden';
