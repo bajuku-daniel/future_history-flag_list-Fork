@@ -299,11 +299,19 @@ function flag_lists_set_commercial_values($flag, $action ) {
       ))
       ->condition('fid', $flag->fid)
       ->execute();
-  }
-
-  //when we change a tour type from 2 to 1 - we have to remove the purchase ID !!!
-  if ($action == 'edit' && $flag->tour_type == 1) {
+  }  else if ($action == 'edit' && $flag->tour_type == 1) {
+    //when we change a tour type from 2 to 1 - we have to remove the purchase ID !!!
     $commercial_tour_purchase_id = '';
+    $tour_values_update = db_update('flag_lists_flags')
+      ->fields(array(
+        'android_purchase_id' => $commercial_tour_purchase_id,
+      ))
+      ->condition('fid', $flag->fid)
+      ->execute();
+  } else if ($action == 'edit' && $flag->tour_type == 2) {
+    // and the other direction...
+    $commercial_tour_fid = $flag->fid;
+    $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
     $tour_values_update = db_update('flag_lists_flags')
       ->fields(array(
         'android_purchase_id' => $commercial_tour_purchase_id,
