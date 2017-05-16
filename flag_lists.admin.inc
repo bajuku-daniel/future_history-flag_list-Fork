@@ -372,15 +372,6 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#size' => 10,
     '#weight' => 4,
   );
-  //
-  // $form['remove_node_ids'] = array(
-  //   '#type' => 'textfield',
-  //   '#title' => t('Items to remove from Tour'),
-  //   '#required' => FALSE,
-  //   '#access' => empty($flag->locked['title']),
-  //   '#disabled' => FALSE,
-  // );
-
 
   /*
   *  DF: add the Tour Sort functionality to the edit tour form
@@ -484,6 +475,8 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     '#weight' => 6,
   );
 
+
+
   //Add the comercial tour form fields
   global $user;
   $user_roles = $user->roles;
@@ -491,30 +484,29 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
   $admin_user_role = array('administrator');
 
   if (array_intersect($commercial_tour_roles_accepted, $user_roles)) {
-    $commercial_tour_id = 0;
-    if (isset($flag)) {
-      $commercial_tour_fid = $flag->fid;
-//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
-      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
-//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=http://dev-daniel.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
-//      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=http://dev.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
-      $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
+    // check if we in a initial run and dont have a qr code or deeplink
+    if (!isset($flag)) {
+      $flag = new \stdClass();
+      $flag->tour_qrcode = '';
+      $flag->tour_deeplink = '';
+      $flag->tour_status = 1;
     }
 
+    $commercial_tour_id = 0;
     //change the header with commercial tour anchor
     $form['header_commercial']['#markup'] = '<div class="tour_edit_header_commercial"><a href="#sort_order">Bildreihenfolge bearbeiten</a> | <a href="#communicate">Tour planen und kommunizieren</a> </div>';
-
 
     $tour_types = array(
       '1' => t('mit Gästeführer (für öffentliche und gebuchte Gruppenführungen)'),
       '2' => t('selbstgeführte App-Tour (für Einzelbucher und Kleingruppen)'),
     );
 
-    if ($flag->tour_type == '0' || empty($flag->tour_type)) {
+    if ( !isset($flag->tour_type) || $flag->tour_type == '0' || empty($flag->tour_type)) {
       $tour_type_default_value = '1';
     } else {
       $tour_type_default_value = $flag->tour_type;
     }
+
 
     $form['tour_type'] = array(
       '#type' => 'radios',
@@ -556,10 +548,15 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
         '#weight' => 1,
         '#disabled' => false,
       );
+      if (!isset($flag->android_purchase_id)){
+        // set flag default values for new commercial Tours
+        $flag->android_purchase_id = 0;
+      }
+
       $form['commercial_tour']['android_purchase_id'] = array(
         '#type' => 'textfield',
         '#title' => t('Purchase ID '),
-        '#default_value' => empty($flag->android_purchase_id) ? $commercial_tour_purchase_id : $flag->android_purchase_id,
+        '#default_value' => $flag->android_purchase_id,
         '#description' => t('Purchase ID for the APP Store. Only visible for the FH - Administrator.'),
         '#maxlength' => 32,
         '#required' => false,
@@ -569,67 +566,19 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
         '#disabled' => true,
       );
     }
-    //shorten the tour deeplink with the firebase API
-    $firebas_api_url = 'https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyA48yhSN-9HEswUNK_SpzhbqQO-xq5o2_0';
-    $firebase_data = array('longDynamicLink' => $commercial_tour_deeplink);
 
-    // use key 'http' even if you send the request to https://...
-    $firebase_options = array(
-        'http' => array(
-            'header'  => "application/json\r\n",
-            'method'  => 'POST',
-            'content' => http_build_query($firebase_data)
-        )
-    );
-    if (empty($flag->tour_deeplink)) {
-      $firebase_context  = stream_context_create($firebase_options);
-      $short_deeplink_json = file_get_contents($firebas_api_url, false, $firebase_context);
-      $short_deeplink = json_decode($short_deeplink_json);
-    } else {
-      $short_deeplink->shortLink = $flag->tour_deeplink;
-    }
-
-    $form['commercial_tour']['tour_deeplink'] = array(
-      '#type' => 'hidden',
-      '#title' => t('Tour Deeplink'),
-      '#default_value' => empty($flag->tour_deeplink) ? $short_deeplink->shortLink : $flag->tour_deeplink,
-      '#description' => t('The deeplink to publish the Tour to your Clients'),
-      '#maxlength' => 255,
-      '#required' => false,
-      '#access' => empty($flag->locked['title']),
-      '#size' => 10,
-      '#weight' => 2,
-      '#disabled' => false,
-    );
-
-    //markup for deeplinks
-    $google_qr_deeplink_url = $short_deeplink->shortLink;
-    $google_qr_image_url = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl='. $google_qr_deeplink_url . '&chld=H|0&choe=UTF-8';
-
-    $form['commercial_tour']['tour_qrcode'] = array(
-      '#type' => 'hidden',
-      '#title' => t('Tour QR Code'),
-      '#default_value' => empty($flag->tour_qrcode) ? $google_qr_image_url : $flag->tour_qrcode,
-      '#description' => t('The Link to the QR code to generate an image'),
-      '#maxlength' => 255,
-      '#required' => false,
-      '#access' => empty($flag->locked['title']),
-      '#size' => 10,
-      '#disabled' => false,
-    );
-
+    // set all informations for the markups in the commercial forms
     $google_qr_alt
       = t('QR Code for @url', array(
-        '@url' => $google_qr_deeplink_url));
+        '@url' =>  $flag->tour_qrcode));
 
     $google_qr_code_img = theme('image', array(
-      'path' => $google_qr_image_url,
+      'path' =>  $flag->tour_qrcode,
       'alt' => $google_qr_alt,
       'attributes' => array('class' => 'googleQRcode'),
     ));
 
-    $tour_deeplink_qr_code_markup = '<div class="deeplink_wrapper"><label>Direktlink zur Tour</label> <p>Direktlink zur Installation der APP und zum Öffnen der Tour: <br><b>' . $google_qr_deeplink_url . '</b><br><small> Diesen Link auf Ihre Website platzieren und per E-Mail an die Teilnehmer Ihrer Tour senden.</small></p></div><div class="qr_code_wrapper"><br><label>QR-Code zur Tour</label><p>QR-Code zur Installation der APP und zum Öffnen der Tour:<br><br>' . $google_qr_code_img . '<br><small>Diesen QR-Code auf Ihre Print Produkte platzieren und als E-Mail Anhang an die Teilnehmer Ihrer Tour senden.</small></div>';
-
+    $tour_deeplink_qr_code_markup = '<div class="deeplink_wrapper"><label>Direktlink zur Tour</label> <p>Direktlink zur Installation der APP und zum Öffnen der Tour: <br><b>' . $flag->tour_deeplink  . '</b><br><small> Diesen Link auf Ihre Website platzieren und per E-Mail an die Teilnehmer Ihrer Tour senden.</small></p></div><div class="qr_code_wrapper"><br><label>QR-Code zur Tour</label><p>QR-Code zur Installation der APP und zum Öffnen der Tour:<br><br>' . $google_qr_code_img . '<br><small>Diesen QR-Code auf Ihre Print Produkte platzieren und als E-Mail Anhang an die Teilnehmer Ihrer Tour senden.</small></div>';
 
     $form['commercial_tour']['tour_deeplink_qr_code'] = array(
       '#type' =>'markup',
@@ -638,9 +587,6 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#weight' => 3,
     );
 
-
-
-//    $tour_deactivation_markup = '<div class="deactivation_message"><p>Um diese Tour zu Deaktivieren sende bitte eine Email an: <a href="mailto:info@future-history.eu">info@future-history.eu</a>. Wir werden die Tour für dich in den Appstores deaktivieren - die Tour bleibt für Benutzer die sie gekauft haben trotzdem benutzbar.</p></div>';
     $tour_deactivation_markup = '<div class="deactivation_message"><p>Zur Deaktivierung dieser Tour bitte eine Email an: <a href="touren@future-history.eu">info@future-history.eu</a> senden. Wir werden die Tour anschliessend im Google Play Store und Apple App Store deaktivieren, so dass keine weiteren Käufe möglich sind. Bereits getätigte Käufe dieser Tour bleiben davon unberührt und können weiterhin zum Aufruf der Tour genutzt werden.</p></div>';
 
     $form['commercial_tour']['deactivation_message'] = array(
@@ -650,6 +596,7 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
       '#weight' => 4,
     );
 
+    // Tour status  -  Only visible for Admin users
     $tour_status = array(
       '0' => t('Inaktiv'),
       '1' => t('Aktiv'),
@@ -701,8 +648,8 @@ function flag_lists_form($form, $form_state, $name = NULL, $type = NULL, $depart
     $form['commercial_tour']['tour_deeplink_qr_code']['#type'] = 'hidden';
     $form['commercial_tour']['deactivation_message']['#type'] = 'hidden';
     $form['commercial_tour_add_help']['#type']='markup';
-
   }
+
   $form['type'] = array(
     '#type' => 'hidden',
     '#value' => $type,
@@ -772,17 +719,19 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->departure_node = $form_state['values']['departure_node'];
     $flag->tour_type = $form_state['values']['tour_type'];
     $flag->tour_price = $form_state['values']['tour_price'];
-    $flag->android_purchase_id = $form_state['values']['android_purchase_id'];
-    $flag->tour_deeplink = $form_state['values']['tour_deeplink'];
-    $flag->tour_qrcode = $form_state['values']['tour_qrcode'];
     $flag->tour_status = intval($form_state['values']['tour_status']);
     $flag->tour_type = intval($form_state['values']['tour_type']);
     flag_lists_set_messages($flag);
+    // we need a fix for all commercial tours that are saved now with the wrong qr_code
+    // we can disable this after the a while
+    if (($flag->tour_type == 1) || ($flag->tour_type == 2)) {
+      flag_lists_set_commercial_values($flag, 'edit');
+    }
+
     flag_lists_save($flag);
     flag_lists_node_list_save_weight($flag, $form_state['input']['data_table']);
     flag_lists_get_distance($id = NULL, $flag, $action = 'renew');
     _flag_lists_clear_cache();
-
   }
   else {
     // New flag. Load the template row.
@@ -815,18 +764,13 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->tour_distance = $form_state['values']['tour_distance'];
     $flag->departure_node = $form_state['values']['departure_node'];
     $flag->tour_price = $form_state['values']['tour_price'];
-    $flag->android_purchase_id = $form_state['values']['android_purchase_id'];
-    $flag->tour_deeplink = $form_state['values']['tour_deeplink'];
-    $flag->tour_qrcode = $form_state['values']['tour_qrcode'];
     $flag->tour_status = 1;
     $flag->tour_type = intval($form_state['values']['tour_type']);
-
 
     flag_lists_set_messages($flag);
     drupal_set_message(t('New Tour added'));
     // Save it.
     flag_lists_save($flag, $account);
-
   }
 }
 

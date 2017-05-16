@@ -242,6 +242,77 @@ function flag_lists_create_links_js() {
   echo $links;
 }
 
+
+function flag_lists_set_commercial_values($flag, $action ) {
+  // check if we have a new flag or no deeplink or qrcode
+  if ( ($action == 'new') || ($action == 'edit' && (empty($flag->tour_qrcode) || empty($flag->tour_deeplink)))) {
+    // values to set in the DB
+    // tour_deeplink
+    // tour_qrcode
+    // $android_purchase_id
+
+    $commercial_tour_fid = $flag->fid;
+    //      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+    //      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=http://dev-daniel.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+    //      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=http://dev.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+    $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
+
+
+    //set the new purchase ID
+    $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
+
+    //shorten the tour deeplink with the firebase API
+    $firebas_api_url = 'https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyA48yhSN-9HEswUNK_SpzhbqQO-xq5o2_0';
+    $firebase_data = array('longDynamicLink' => $commercial_tour_deeplink);
+
+    // use key 'http' even if you send the request to https://...
+    $query = http_build_query($firebase_data);
+    $firebase_options = array(
+      'http' => array(
+          'header' => "Content-Type: application/x-www-form-urlencoded\r\n".
+                      "Content-Length: ".strlen($query)."\r\n".
+                      "User-Agent:MyAgent/1.0\r\n",
+          'method'  => 'POST',
+          'content' => $query
+      )
+    );
+
+    //and get the shortlink
+    $firebase_context  = stream_context_create($firebase_options);
+    $short_deeplink_json = file_get_contents($firebas_api_url, false, $firebase_context);
+    $short_deeplink = json_decode($short_deeplink_json);
+
+    //markup for deeplinks
+    $google_qr_deeplink_url = $short_deeplink->shortLink;
+    $google_qr_image_url = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl='. $google_qr_deeplink_url . '&chld=H|0&choe=UTF-8';
+
+    $tour_values_update = db_update('flag_lists_flags')
+      ->fields(array(
+        'tour_deeplink' => $google_qr_deeplink_url,
+        'tour_qrcode' => $google_qr_image_url ,
+        'android_purchase_id' => $commercial_tour_purchase_id,
+      ))
+      ->condition('fid', $flag->fid)
+      ->execute();
+  }
+  // Thats the fix if we have a wrong QR code
+  if ($action == 'edit' && $flag->tour_qrcode == 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=&chld=H|0&choe=UTF-8'){
+    // Thats the fix if we have a wrong QR code
+    drupal_set_message('We have a wrong QR code and need to update it');
+    //markup for deeplinks
+    $google_qr_deeplink_url = $flag->tour_deeplink;
+    $google_qr_image_url = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl='. $google_qr_deeplink_url . '&chld=H|0&choe=UTF-8';
+    drupal_set_message('OLD QR_code path:' . $flag->tour_qrcode  );
+    drupal_set_message('NEW QR_code path:' . $google_qr_image_url  );
+    $tour_values_update = db_update('flag_lists_flags')
+      ->fields(array(
+        'tour_qrcode' => $google_qr_image_url ,
+      ))
+      ->condition('fid', $flag->fid)
+      ->execute();
+  }
+}
+
 function flag_lists_set_date($id = NULL, $flag, $action ) {
   //if we have an ID we flag a new node
   if ($id && $action == 'flag' && $flag->manual_date == 0) {
@@ -1615,8 +1686,6 @@ function flag_lists_save(&$flag, $account = NULL) {
     $flag->is_new = TRUE;
     module_invoke_all('flag_lists', $flag, $account);
   }
-  // Clear the page cache for anonymous users.
-  //    cache_clear_all('*', 'cache_page', TRUE);
 }
 
 /**
@@ -1634,9 +1703,6 @@ function flag_lists_update($flag) {
       'name' => $flag->name,
       'tour_type' => $flag->tour_type,
       'tour_price' => $flag->tour_price,
-      'android_purchase_id' => $flag->android_purchase_id,
-      'tour_deeplink' => $flag->tour_deeplink,
-      'tour_qrcode' => $flag->tour_qrcode,
       'tour_status' => $flag->tour_status,
 
       'options' => $flag->get_serialized_options($flag),
@@ -1662,10 +1728,6 @@ function flag_lists_insert($flag) {
       'tour_distance' => $flag->tour_distance,
       'manual_date' => $flag->manual_date,
       'tour_type' => $flag->tour_type,
-      'tour_price' => $flag->tour_price,
-      'android_purchase_id' => $flag->android_purchase_id,
-      'tour_deeplink' => $flag->tour_deeplink,
-      'tour_qrcode' => $flag->tour_qrcode,
       'tour_status' => $flag->tour_status,
       'options' => $flag->get_serialized_options($flag),
     ))
@@ -1676,6 +1738,10 @@ function flag_lists_insert($flag) {
   //Daniel Frings: add departure node to the tour if we have one
   if ($flag->departure_node != NULL) {
       flag_lists_do_flag($flag, 'flag', $flag->departure_node, $account = NULL, $skip_permission_check = FALSE);
+  }
+  // Add the commercial Tour settings if we have a commercial tour
+  if (($flag->tour_type == 1) || ($flag->tour_type == 2)) {
+    flag_lists_set_commercial_values($flag, 'new');
   }
 }
 
@@ -1753,8 +1819,7 @@ function flag_lists_page($action = NULL, $flag_name = NULL, $entity_id = NULL) {
   // If successful, return data according to the request type.
   if ($js) {
     drupal_add_http_header('Content-Type', 'text/javascript; charset=utf-8');
-    //    $flag = flag_lists_get_flag($flag_name);
-    //   $flag->link_type = 'toggle';
+
     $sid = flag_get_sid($user->uid);
     $new_action = _flag_lists_is_flagged($flag, $entity_id, $user->uid, $sid) ? 'unflag' : 'flag';
     $new_link = $flag->theme($new_action, $entity_id, array("after_flagging" => TRUE));
