@@ -245,6 +245,7 @@ function flag_lists_create_links_js() {
 
 function flag_lists_set_commercial_values($flag, $action ) {
   // check if we have a new flag or no deeplink or qrcode
+
   if ( ($action == 'new') || ($action == 'edit' && (empty($flag->tour_qrcode) || empty($flag->tour_deeplink)))) {
     // values to set in the DB
     // tour_deeplink
@@ -256,10 +257,6 @@ function flag_lists_set_commercial_values($flag, $action ) {
     //      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&link=http://dev-daniel.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
     //      $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=http://dev.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
     $commercial_tour_deeplink = 'https://x5b33.app.goo.gl/?apn=com.extendedvision.futurehistory&ibi=com.extended-vision.futurehistory&isi=1034236058&link=https://www.future-history.eu/flag/lists/'.$commercial_tour_fid.'?tour_id=' . $commercial_tour_fid;
-
-
-    //set the new purchase ID
-    $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
 
     //shorten the tour deeplink with the firebase API
     $firebas_api_url = 'https://firebasedynamiclinks.googleapis.com/v1/shortLinks?key=AIzaSyA48yhSN-9HEswUNK_SpzhbqQO-xq5o2_0';
@@ -286,6 +283,14 @@ function flag_lists_set_commercial_values($flag, $action ) {
     $google_qr_deeplink_url = $short_deeplink->shortLink;
     $google_qr_image_url = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl='. $google_qr_deeplink_url . '&chld=H|0&choe=UTF-8';
 
+    if ($flag->tour_type == 2){
+      //set the new purchase ID
+      $commercial_tour_purchase_id = 'eu.futurehistory.tour.' . $commercial_tour_fid;
+    } else {
+      //if we are not tour type 2 - remove the purchase id
+      $commercial_tour_purchase_id = '';
+    }
+
     $tour_values_update = db_update('flag_lists_flags')
       ->fields(array(
         'tour_deeplink' => $google_qr_deeplink_url,
@@ -295,6 +300,18 @@ function flag_lists_set_commercial_values($flag, $action ) {
       ->condition('fid', $flag->fid)
       ->execute();
   }
+
+  //when we change a tour type from 2 to 1 - we have to remove the purchase ID !!!
+  if ($action == 'edit' && $flag->tour_type == 1) {
+    $commercial_tour_purchase_id = '';
+    $tour_values_update = db_update('flag_lists_flags')
+      ->fields(array(
+        'android_purchase_id' => $commercial_tour_purchase_id,
+      ))
+      ->condition('fid', $flag->fid)
+      ->execute();
+  }
+
   // Secret mission: fix the QR code Bug and write an info with watchdog :)
   // Thats the fix if we have a wrong QR code
   if ($action == 'edit' && $flag->tour_qrcode == 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=&chld=H|0&choe=UTF-8'){
