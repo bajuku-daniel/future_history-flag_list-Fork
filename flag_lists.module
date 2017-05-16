@@ -295,15 +295,15 @@ function flag_lists_set_commercial_values($flag, $action ) {
       ->condition('fid', $flag->fid)
       ->execute();
   }
+  // Secret mission: fix the QR code Bug and write an info with watchdog :)
   // Thats the fix if we have a wrong QR code
   if ($action == 'edit' && $flag->tour_qrcode == 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=&chld=H|0&choe=UTF-8'){
     // Thats the fix if we have a wrong QR code
-    drupal_set_message('We have a wrong QR code and need to update it');
     //markup for deeplinks
     $google_qr_deeplink_url = $flag->tour_deeplink;
     $google_qr_image_url = 'https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl='. $google_qr_deeplink_url . '&chld=H|0&choe=UTF-8';
-    drupal_set_message('OLD QR_code path:' . $flag->tour_qrcode  );
-    drupal_set_message('NEW QR_code path:' . $google_qr_image_url  );
+
+    watchdog('flag_lists', 'hidden mission: repair the wrong QR code' . $google_qr_image_url);
     $tour_values_update = db_update('flag_lists_flags')
       ->fields(array(
         'tour_qrcode' => $google_qr_image_url ,

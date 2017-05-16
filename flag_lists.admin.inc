@@ -718,7 +718,9 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->tour_distance = $form_state['values']['tour_distance'];
     $flag->departure_node = $form_state['values']['departure_node'];
     $flag->tour_type = $form_state['values']['tour_type'];
-    $flag->tour_price = $form_state['values']['tour_price'];
+    if (isset($form_state['values']['tour_price'])){
+      $flag->tour_price = $form_state['values']['tour_price'];
+    }
     $flag->tour_status = intval($form_state['values']['tour_status']);
     $flag->tour_type = intval($form_state['values']['tour_type']);
     flag_lists_set_messages($flag);
@@ -763,7 +765,9 @@ function flag_lists_form_submit($form, $form_state, $account = NULL) {
     $flag->period_end = $form_state['values']['period_end'];
     $flag->tour_distance = $form_state['values']['tour_distance'];
     $flag->departure_node = $form_state['values']['departure_node'];
-    $flag->tour_price = $form_state['values']['tour_price'];
+    if (isset($form_state['values']['tour_price'])){
+      $flag->tour_price = $form_state['values']['tour_price'];
+    }
     $flag->tour_status = 1;
     $flag->tour_type = intval($form_state['values']['tour_type']);
 
